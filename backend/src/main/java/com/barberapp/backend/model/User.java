@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Builder;
+import java.util.Set;
+import java.util.HashSet;
 
 @Data
 @Builder
@@ -35,4 +37,15 @@ public class User {
     private Role role;
 
     private String avatarUrl;
+
+    @ManyToMany(fetch = FetchType.EAGER) // Um user (barbeiro) pode ter várias especialidades
+    @JoinTable(
+            name = "user_specialties", // Nome da tabela de junção
+            joinColumns = @JoinColumn(name = "user_id"), // Coluna do user
+            inverseJoinColumns = @JoinColumn(name = "specialty_id") // Coluna da especialidade
+    )
+    // Inicializar com newHashSet para nunca ser 'null'
+    @Builder.Default
+    private Set<Specialty> specialties = new HashSet<>(); // Uso de Set para evitar duplicados
+
 }
