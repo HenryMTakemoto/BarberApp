@@ -1,4 +1,4 @@
-package com.barberapp.backend.model;
+package com.barberapp.backend.dto;
 
 import com.barberapp.backend.model.Role;
 import lombok.Data;
