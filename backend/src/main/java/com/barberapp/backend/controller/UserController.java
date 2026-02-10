@@ -1,5 +1,6 @@
 package com.barberapp.backend.controller;
 
+import com.barberapp.backend.dto.UpdateUserRequest;
 import com.barberapp.backend.dto.UserDTO;
 import com.barberapp.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -23,5 +24,15 @@ public class UserController {
         // status 201 (Created) e json do usuário criado
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
 
+    }
+
+    // PUT: Atualizar Perfil (Pessoal e/ou Barbeiro)
+    @PutMapping("/{id}")
+    public ResponseEntity<UserDTO> updateProfile(
+            @PathVariable Long id,
+            @RequestBody UpdateUserRequest dto) {
+
+        UserDTO updatedUser = userService.updateUser(id, dto);
+        return ResponseEntity.ok(updatedUser);
     }
 }

@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Builder;
+import org.hibernate.annotations.DynamicUpdate;
+
 import java.util.Set;
 import java.util.HashSet;
 
@@ -14,7 +16,7 @@ import java.util.HashSet;
 @AllArgsConstructor
 @Entity
 @Table(name = "users")
-
+@DynamicUpdate
 public class User {
 
     @Id
@@ -37,6 +39,9 @@ public class User {
     private Role role;
 
     private String avatarUrl;
+
+    @Column(length = 500)
+    private String bio;
 
     @ManyToMany(fetch = FetchType.EAGER) // Um user (barbeiro) pode ter várias especialidades
     @JoinTable(

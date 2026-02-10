@@ -2,6 +2,7 @@ package com.barberapp.backend.dto;
 
 import com.barberapp.backend.model.Role;
 import lombok.Data;
+import java.util.Set;
 
 @Data
 public class UserDTO {
@@ -11,4 +12,5 @@ public class UserDTO {
     private String phoneNumber;
     private Role role;
     private String avatarUrl;
+    private Set<String> specialties;
 }
