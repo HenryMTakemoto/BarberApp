@@ -1,6 +1,8 @@
 package com.barberapp.backend.service;
 
+import com.barberapp.backend.dto.AddressDTO;
 import com.barberapp.backend.dto.UpdateUserRequest;
+import com.barberapp.backend.model.Address;
 import com.barberapp.backend.model.Role;
 import com.barberapp.backend.model.Specialty;
 import com.barberapp.backend.model.User;
@@ -104,6 +106,24 @@ public class UserService {
                 user.setRole(Role.BARBER);
             }
         }
+        // --- ATUALIZAÇÃO DO ENDEREÇO ---
+        if (dto.getAddress() != null) {
+            AddressDTO addrDto = dto.getAddress();
+
+            // Se o utilizador ainda não tem morada, criamos uma nova
+            if (user.getAddress() == null) {
+                user.setAddress(new Address());
+            }
+
+            // Atualizamos os campos
+            if (addrDto.getStreet() != null) user.getAddress().setStreet(addrDto.getStreet());
+            if (addrDto.getNumber() != null) user.getAddress().setNumber(addrDto.getNumber());
+            if (addrDto.getCity() != null) user.getAddress().setCity(addrDto.getCity());
+            if (addrDto.getState() != null) user.getAddress().setState(addrDto.getState());
+            if (addrDto.getZipCode() != null) user.getAddress().setZipCode(addrDto.getZipCode());
+            if (addrDto.getLatitude() != null) user.getAddress().setLatitude(addrDto.getLatitude());
+            if (addrDto.getLongitude() != null) user.getAddress().setLongitude(addrDto.getLongitude());
+        }
         User savedUser = userRepository.save(user);
         return convertToUserDTO(savedUser);
     }
@@ -124,6 +144,18 @@ public class UserService {
                     .map(Specialty::getName)
                     .collect(Collectors.toSet());
             dto.setSpecialties(specialtyNames);
+        }
+        // Converte o Endereço (se existir)
+        if (user.getAddress() != null) {
+            AddressDTO addrDto = new AddressDTO();
+            addrDto.setStreet(user.getAddress().getStreet());
+            addrDto.setNumber(user.getAddress().getNumber());
+            addrDto.setCity(user.getAddress().getCity());
+            addrDto.setState(user.getAddress().getState());
+            addrDto.setZipCode(user.getAddress().getZipCode());
+            addrDto.setLatitude(user.getAddress().getLatitude());
+            addrDto.setLongitude(user.getAddress().getLongitude());
+            dto.setAddress(addrDto);
         }
         return dto;
     }
