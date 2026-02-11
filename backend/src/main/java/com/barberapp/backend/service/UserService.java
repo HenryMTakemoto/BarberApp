@@ -159,4 +159,39 @@ public class UserService {
         }
         return dto;
     }
+
+    // Função do Radar
+    public List<UserDTO> getNearbyBarbers(Double lat, Double lng, Double radiusKm) {
+        // O banco de dados traz a lista filtrada
+        List<User> nearbyBarbers = userRepository.findNearbyBarbers(lat, lng, radiusKm);
+
+        // Convertê-los para DTO e preencher a distância exata
+        return nearbyBarbers.stream().map(user -> {
+            UserDTO dto = convertToUserDTO(user);
+
+            // Calcula a distância para exibir no App
+            double distance = calculateHaversineDistance(
+                    lat, lng,
+                    user.getAddress().getLatitude(),
+                    user.getAddress().getLongitude()
+            );
+
+            // Arredonda para 1 casa decimal (ex: 2.3 km)
+            dto.setDistanceKm(Math.round(distance * 10.0) / 10.0);
+
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    // Fórmula de Haversine
+    private double calculateHaversineDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int EARTH_RADIUS = 6371; // Raio da terra em Km
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return EARTH_RADIUS * c;
+    }
 }

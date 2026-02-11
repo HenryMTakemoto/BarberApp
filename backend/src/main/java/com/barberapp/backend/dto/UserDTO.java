@@ -14,4 +14,5 @@ public class UserDTO {
     private String avatarUrl;
     private Set<String> specialties;
     private AddressDTO address;
+    private Double distanceKm;
 }
