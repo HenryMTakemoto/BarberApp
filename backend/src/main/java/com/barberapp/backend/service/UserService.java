@@ -9,7 +9,10 @@ import com.barberapp.backend.repository.SpecialtyRepository;
 import com.barberapp.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import com.barberapp.backend.dto.LoginRequest;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +24,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final SpecialtyRepository specialtyRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public UserDTO registerUser(UserDTO userDTO) {
         // Verificar se já existe um usuário com esse email
@@ -28,13 +32,15 @@ public class UserService {
             throw new RuntimeException("Email já existente");
         }
 
+        String senhaCriptografada = passwordEncoder.encode("123456");
+
         // Transformar o DTO vindo do app em Entidade para usar no BD
         User userToSave = User.builder()
                 .name(userDTO.getName())
                 .email(userDTO.getEmail())
-                .password("123456")  // Por enquanto fixo, pois ainda não há senha
+                .password(senhaCriptografada) // Por enquanto fixo, pois ainda não há senha
                 .phoneNumber(userDTO.getPhoneNumber())
-                .role(userDTO.getRole())
+                .role(Role.CLIENT)
                 .avatarUrl(userDTO.getAvatarUrl())
                 .build();
 
@@ -44,6 +50,22 @@ public class UserService {
         userDTO.setId(savedUser.getId());
         return userDTO;
 
+    }
+
+    // Fazer Login
+    public UserDTO login(LoginRequest request) {
+        // Tenta encontrar o usuário pelo email
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
+
+        // Compara a senha digitada com a Hash do banco
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            // Se não bater, Erro 401 (Não Autorizado)
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+        }
+
+        // Se a senha estiver certa, devolvemos os dados do usuário
+        return convertToUserDTO(user);
     }
 
     public UserDTO updateUser(Long userId, UpdateUserRequest dto) {
