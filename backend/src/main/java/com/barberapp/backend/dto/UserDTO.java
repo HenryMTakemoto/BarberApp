@@ -13,4 +13,6 @@ public class UserDTO {
     private Role role;
     private String avatarUrl;
     private Set<String> specialties;
+    private AddressDTO address;
+    private Double distanceKm;
 }

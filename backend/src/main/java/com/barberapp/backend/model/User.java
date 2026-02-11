@@ -43,6 +43,10 @@ public class User {
     @Column(length = 500)
     private String bio;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "address_id", referencedColumnName = "id")
+    private Address address;
+
     @ManyToMany(fetch = FetchType.EAGER) // Um user (barbeiro) pode ter várias especialidades
     @JoinTable(
             name = "user_specialties", // Nome da tabela de junção

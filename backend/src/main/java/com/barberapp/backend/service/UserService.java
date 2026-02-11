@@ -1,6 +1,8 @@
 package com.barberapp.backend.service;
 
+import com.barberapp.backend.dto.AddressDTO;
 import com.barberapp.backend.dto.UpdateUserRequest;
+import com.barberapp.backend.model.Address;
 import com.barberapp.backend.model.Role;
 import com.barberapp.backend.model.Specialty;
 import com.barberapp.backend.model.User;
@@ -104,6 +106,24 @@ public class UserService {
                 user.setRole(Role.BARBER);
             }
         }
+        // --- ATUALIZAÇÃO DO ENDEREÇO ---
+        if (dto.getAddress() != null) {
+            AddressDTO addrDto = dto.getAddress();
+
+            // Se o utilizador ainda não tem morada, criamos uma nova
+            if (user.getAddress() == null) {
+                user.setAddress(new Address());
+            }
+
+            // Atualizamos os campos
+            if (addrDto.getStreet() != null) user.getAddress().setStreet(addrDto.getStreet());
+            if (addrDto.getNumber() != null) user.getAddress().setNumber(addrDto.getNumber());
+            if (addrDto.getCity() != null) user.getAddress().setCity(addrDto.getCity());
+            if (addrDto.getState() != null) user.getAddress().setState(addrDto.getState());
+            if (addrDto.getZipCode() != null) user.getAddress().setZipCode(addrDto.getZipCode());
+            if (addrDto.getLatitude() != null) user.getAddress().setLatitude(addrDto.getLatitude());
+            if (addrDto.getLongitude() != null) user.getAddress().setLongitude(addrDto.getLongitude());
+        }
         User savedUser = userRepository.save(user);
         return convertToUserDTO(savedUser);
     }
@@ -125,6 +145,53 @@ public class UserService {
                     .collect(Collectors.toSet());
             dto.setSpecialties(specialtyNames);
         }
+        // Converte o Endereço (se existir)
+        if (user.getAddress() != null) {
+            AddressDTO addrDto = new AddressDTO();
+            addrDto.setStreet(user.getAddress().getStreet());
+            addrDto.setNumber(user.getAddress().getNumber());
+            addrDto.setCity(user.getAddress().getCity());
+            addrDto.setState(user.getAddress().getState());
+            addrDto.setZipCode(user.getAddress().getZipCode());
+            addrDto.setLatitude(user.getAddress().getLatitude());
+            addrDto.setLongitude(user.getAddress().getLongitude());
+            dto.setAddress(addrDto);
+        }
         return dto;
+    }
+
+    // Função do Radar
+    public List<UserDTO> getNearbyBarbers(Double lat, Double lng, Double radiusKm) {
+        // O banco de dados traz a lista filtrada
+        List<User> nearbyBarbers = userRepository.findNearbyBarbers(lat, lng, radiusKm);
+
+        // Convertê-los para DTO e preencher a distância exata
+        return nearbyBarbers.stream().map(user -> {
+            UserDTO dto = convertToUserDTO(user);
+
+            // Calcula a distância para exibir no App
+            double distance = calculateHaversineDistance(
+                    lat, lng,
+                    user.getAddress().getLatitude(),
+                    user.getAddress().getLongitude()
+            );
+
+            // Arredonda para 1 casa decimal (ex: 2.3 km)
+            dto.setDistanceKm(Math.round(distance * 10.0) / 10.0);
+
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    // Fórmula de Haversine
+    private double calculateHaversineDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int EARTH_RADIUS = 6371; // Raio da terra em Km
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return EARTH_RADIUS * c;
     }
 }

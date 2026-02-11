@@ -14,4 +14,5 @@ public class UpdateUserRequest {
     private String email;
     private String avatarUrl;
     private String name;
+    private AddressDTO address;
 }
