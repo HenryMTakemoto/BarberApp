@@ -49,9 +49,7 @@ public class UserService {
         // Salvar no banco
         User savedUser = userRepository.save(userToSave);
         // Retorno para saber que foi salvo com sucesso
-        userDTO.setId(savedUser.getId());
-        return userDTO;
-
+        return convertToUserDTO(savedUser);
     }
 
     // Fazer Login
