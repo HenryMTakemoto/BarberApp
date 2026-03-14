@@ -2,7 +2,9 @@ package com.barberapp.backend.controller;
 
 import com.barberapp.backend.dto.LoginRequest;
 import com.barberapp.backend.dto.UserDTO;
+import com.barberapp.backend.dto.AuthResponse;
 import com.barberapp.backend.service.UserService;
+import com.barberapp.backend.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,12 +15,18 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final UserService userService;
+    private final JwtService jwtService;
 
     // POST: Fazer Login
     // URL: http://localhost:8080/api/auth/login
     @PostMapping("/login")
-    public ResponseEntity<UserDTO> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         UserDTO loggedUser = userService.login(request);
-        return ResponseEntity.ok(loggedUser);
+        String token = jwtService.generateToken(loggedUser.getEmail());
+        AuthResponse authResponse = AuthResponse.builder()
+                .token(token)
+                .user(loggedUser)
+                .build();
+        return ResponseEntity.ok(authResponse);
     }
 }
