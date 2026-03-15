@@ -36,3 +36,7 @@ build/
 # Ignorar configurações
 secrets.properties
 **/secrets.properties 
+error_response.json
+exception_trace.txt
+server.log
+*.log
