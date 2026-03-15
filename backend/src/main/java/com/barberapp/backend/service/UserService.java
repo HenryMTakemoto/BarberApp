@@ -32,6 +32,7 @@ public class UserService implements UserDetailsService {
     private final SpecialtyRepository specialtyRepository;
     private final PasswordEncoder passwordEncoder;
 
+
     // ── Spring Security usa esse método para autenticar ──
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -43,7 +44,11 @@ public class UserService implements UserDetailsService {
         if (userRepository.existsByEmail(userDTO.getEmail())) {
             throw new RuntimeException("Email já existente");
         }
-        String senhaCriptografada = passwordEncoder.encode("123456");
+        if (userDTO.getPassword() == null || userDTO.getPassword().isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Senha é obrigatória");
+        }
+        String senhaCriptografada = passwordEncoder.encode(userDTO.getPassword());
         User userToSave = User.builder()
                 .name(userDTO.getName())
                 .email(userDTO.getEmail())

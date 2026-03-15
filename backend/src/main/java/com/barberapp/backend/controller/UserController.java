@@ -6,7 +6,6 @@ import com.barberapp.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +16,6 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final PasswordEncoder passwordEncoder;
 
     @PostMapping
     public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
@@ -47,10 +45,5 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
-    // TEMPORÁRIO — gera hash BCrypt para atualizar no banco
-    @GetMapping("/generate-hash")
-    public ResponseEntity<String> generateHash() {
-        String hash = passwordEncoder.encode("123456");
-        return ResponseEntity.ok(hash);
-    }
+
 }
