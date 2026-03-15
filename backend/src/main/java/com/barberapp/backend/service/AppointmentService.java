@@ -9,8 +9,12 @@ import com.barberapp.backend.repository.AppointmentRepository;
 import com.barberapp.backend.repository.SpecialtyRepository;
 import com.barberapp.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -65,11 +69,46 @@ public class AppointmentService {
                 .date(appointment.getDate())
                 .status(appointment.getStatus())
                 .clientId(appointment.getClient().getId())
-                .clientName(appointment.getClient().getName()) // Extra: Mandamos o nome para facilitar no Front
+                .clientName(appointment.getClient().getName())
                 .barberId(appointment.getBarber().getId())
                 .barberName(appointment.getBarber().getName())
                 .specialtyId(appointment.getSpecialty().getId())
                 .specialtyName(appointment.getSpecialty().getName())
                 .build();
+    }
+
+
+    public List<AppointmentDTO> getByClientId(Long clientId) { // Agendamentos do cliente
+        return appointmentRepository
+                .findByClientIdOrderByDateDesc(clientId)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<AppointmentDTO> getByBarberId(Long barberId) { // Agenda do barbeiro
+        return appointmentRepository
+                .findByBarberIdOrderByDateAsc(barberId)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+    public List<AppointmentDTO> getByBarberIdAndDate(Long barberId, LocalDate date) { // Agenda por dia
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.atTime(23, 59, 59);
+        return appointmentRepository
+                .findByBarberIdAndDateBetweenOrderByDateAsc(barberId, start, end)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public AppointmentDTO updateStatus(Long id, AppointmentStatus newStatus) {
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Appointment not found with id: " + id));
+
+        appointment.setStatus(newStatus);
+        return convertToDTO(appointmentRepository.save(appointment));
     }
 }
