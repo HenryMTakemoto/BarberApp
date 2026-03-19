@@ -20,4 +20,8 @@ public class UserDTO {
     private Set<String> specialties;
     private AddressDTO address;
     private Double distanceKm;
+
+    // review variables
+    private Double rating;
+    private Long reviewCount;
 }

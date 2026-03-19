@@ -8,6 +8,7 @@ import com.barberapp.backend.model.Address;
 import com.barberapp.backend.model.Role;
 import com.barberapp.backend.model.Specialty;
 import com.barberapp.backend.model.User;
+import com.barberapp.backend.repository.ReviewRepository;
 import com.barberapp.backend.repository.SpecialtyRepository;
 import com.barberapp.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final SpecialtyRepository specialtyRepository;
     private final PasswordEncoder passwordEncoder;
-
+    private final ReviewRepository reviewRepository;
 
     // ── Spring Security usa esse método para autenticar ──
     @Override
@@ -152,6 +153,13 @@ public class UserService implements UserDetailsService {
             addrDto.setLatitude(user.getAddress().getLatitude());
             addrDto.setLongitude(user.getAddress().getLongitude());
             dto.setAddress(addrDto);
+        }
+        if (user.getRole() == Role.BARBER) {
+            dto.setRating(
+                    Math.round(reviewRepository.findAverageRatingByBarberId(user.getId())
+                            .orElse(0.0) * 10.0) / 10.0
+            );
+            dto.setReviewCount(reviewRepository.countByBarberId(user.getId()));
         }
         return dto;
     }
