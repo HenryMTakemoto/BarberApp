@@ -38,17 +38,28 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
+                        // Auth — public
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+
+                        // User/Radar — public
                         .requestMatchers(HttpMethod.GET, "/api/users/nearby-barbers").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/specialties").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
+
+                        // Specialties — public
+                        .requestMatchers(HttpMethod.GET, "/api/specialties").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/specialties/**").permitAll()
+
+                        // Barber public routes
+                        .requestMatchers(HttpMethod.GET, "/api/barbers/**").permitAll()
+
+                        // Appointment barber agenda — public
                         .requestMatchers(HttpMethod.GET, "/api/appointments/barber/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/barbers/*/services").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/barbers/*/availability").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/barbers/*/availability/slots").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/barbers/*/availability/periods").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/barbers/*/availability/slots").permitAll()
+
+                        // Reviews — requires authentication
+                        .requestMatchers(HttpMethod.POST, "/api/reviews").authenticated()
+
+                        // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

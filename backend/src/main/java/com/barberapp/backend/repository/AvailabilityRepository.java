@@ -12,6 +12,6 @@ public interface AvailabilityRepository extends JpaRepository<BarberAvailability
 
     List<BarberAvailability> findByBarberId(Long barberId);
 
-    Optional<BarberAvailability> findByBarberIdAndDayOfWeek(
+    List<BarberAvailability> findByBarberIdAndDayOfWeek(
             Long barberId, Integer dayOfWeek);
 }
