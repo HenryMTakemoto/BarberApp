@@ -30,7 +30,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
         String method = request.getMethod();
-        // Rotas públicas — filtro não precisa agir
         return (method.equals("POST") && path.equals("/api/auth/login")) ||
                 (method.equals("POST") && path.equals("/api/users")) ||
                 (method.equals("GET")  && path.startsWith("/api/users/nearby-barbers")) ||
@@ -61,7 +60,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             final String jwt = authHeader.substring(7);
             final String userEmail = jwtService.extractEmail(jwt);
             System.out.println(">>> Extracted email: " + userEmail);
-            System.out.println(">>> Token expired: " + (userEmail == null));
 
             if (userEmail != null &&
                     SecurityContextHolder.getContext().getAuthentication() == null) {
