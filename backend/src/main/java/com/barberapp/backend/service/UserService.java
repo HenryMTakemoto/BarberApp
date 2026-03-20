@@ -127,16 +127,19 @@ public class UserService implements UserDetailsService {
         return convertToUserDTO(userRepository.save(user));
     }
 
-    public List<UserDTO> getNearbyBarbers(Double lat, Double lng, Double radiusKm) {
-        return userRepository.findNearbyBarbers(lat, lng, radiusKm).stream().map(user -> {
-            UserDTO dto = convertToUserDTO(user);
-            double distance = calculateHaversineDistance(
-                    lat, lng,
-                    user.getAddress().getLatitude(),
-                    user.getAddress().getLongitude());
-            dto.setDistanceKm(Math.round(distance * 10.0) / 10.0);
-            return dto;
-        }).collect(Collectors.toList());
+    public List<UserDTO> getNearbyBarbers(Double lat, Double lng,
+                                          Double radiusKm, String specialty) {
+        return userRepository
+                .findNearbyBarbersFiltered(lat, lng, radiusKm, specialty)
+                .stream().map(user -> {
+                    UserDTO dto = convertToUserDTO(user);
+                    double distance = calculateHaversineDistance(
+                            lat, lng,
+                            user.getAddress().getLatitude(),
+                            user.getAddress().getLongitude());
+                    dto.setDistanceKm(Math.round(distance * 10.0) / 10.0);
+                    return dto;
+                }).collect(Collectors.toList());
     }
 
     public UserDTO convertToUserDTO(User user) {

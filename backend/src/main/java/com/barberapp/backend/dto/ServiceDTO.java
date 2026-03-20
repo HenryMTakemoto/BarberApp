@@ -12,7 +12,7 @@ import lombok.AllArgsConstructor;
 public class ServiceDTO {
     private Long id;
     private String name;
-    private Integer durationMinutes;
+    private Integer duration;
     private Double price;
     private Long barberId;
     private String barberName;
