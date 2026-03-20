@@ -8,6 +8,7 @@ import com.barberapp.backend.model.Address;
 import com.barberapp.backend.model.Role;
 import com.barberapp.backend.model.Specialty;
 import com.barberapp.backend.model.User;
+import com.barberapp.backend.repository.ReviewRepository;
 import com.barberapp.backend.repository.SpecialtyRepository;
 import com.barberapp.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +32,8 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final SpecialtyRepository specialtyRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ReviewRepository reviewRepository;
 
-
-    // ── Spring Security usa esse método para autenticar ──
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         return userRepository.findByEmail(email)
@@ -76,11 +76,13 @@ public class UserService implements UserDetailsService {
             System.out.println(">>> Senha bate? " + matches);
 
             if (!matches) {
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+                throw new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED, "Invalid email or password");
             }
         } catch (Exception e) {
             System.out.println(">>> ERRO no BCrypt: " + e.getMessage());
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
 
         return convertToUserDTO(user);
@@ -99,20 +101,28 @@ public class UserService implements UserDetailsService {
         }
         if (dto.getBio() != null) user.setBio(dto.getBio());
         if (dto.getSpecialtyIds() != null) {
-            List<Specialty> foundSpecialties = specialtyRepository.findAllById(dto.getSpecialtyIds());
+            List<Specialty> foundSpecialties =
+                    specialtyRepository.findAllById(dto.getSpecialtyIds());
             user.setSpecialties(new HashSet<>(foundSpecialties));
             if (!foundSpecialties.isEmpty()) user.setRole(Role.BARBER);
         }
         if (dto.getAddress() != null) {
             AddressDTO addrDto = dto.getAddress();
             if (user.getAddress() == null) user.setAddress(new Address());
-            if (addrDto.getStreet() != null) user.getAddress().setStreet(addrDto.getStreet());
-            if (addrDto.getNumber() != null) user.getAddress().setNumber(addrDto.getNumber());
-            if (addrDto.getCity() != null) user.getAddress().setCity(addrDto.getCity());
-            if (addrDto.getState() != null) user.getAddress().setState(addrDto.getState());
-            if (addrDto.getZipCode() != null) user.getAddress().setZipCode(addrDto.getZipCode());
-            if (addrDto.getLatitude() != null) user.getAddress().setLatitude(addrDto.getLatitude());
-            if (addrDto.getLongitude() != null) user.getAddress().setLongitude(addrDto.getLongitude());
+            if (addrDto.getStreet() != null)
+                user.getAddress().setStreet(addrDto.getStreet());
+            if (addrDto.getNumber() != null)
+                user.getAddress().setNumber(addrDto.getNumber());
+            if (addrDto.getCity() != null)
+                user.getAddress().setCity(addrDto.getCity());
+            if (addrDto.getState() != null)
+                user.getAddress().setState(addrDto.getState());
+            if (addrDto.getZipCode() != null)
+                user.getAddress().setZipCode(addrDto.getZipCode());
+            if (addrDto.getLatitude() != null)
+                user.getAddress().setLatitude(addrDto.getLatitude());
+            if (addrDto.getLongitude() != null)
+                user.getAddress().setLongitude(addrDto.getLongitude());
         }
         return convertToUserDTO(userRepository.save(user));
     }
@@ -153,6 +163,14 @@ public class UserService implements UserDetailsService {
             addrDto.setLongitude(user.getAddress().getLongitude());
             dto.setAddress(addrDto);
         }
+        // Populate rating and review count for barbers
+        if (user.getRole() == Role.BARBER) {
+            dto.setRating(
+                    Math.round(reviewRepository.findAverageRatingByBarberId(user.getId())
+                            .orElse(0.0) * 10.0) / 10.0
+            );
+            dto.setReviewCount(reviewRepository.countByBarberId(user.getId()));
+        }
         return dto;
     }
 
@@ -161,9 +179,9 @@ public class UserService implements UserDetailsService {
         final int R = 6371;
         double dLat = Math.toRadians(lat2 - lat1);
         double dLon = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
                 Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-                        Math.sin(dLon/2) * Math.sin(dLon/2);
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 

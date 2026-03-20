@@ -38,11 +38,14 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .authorizeHttpRequests(auth -> auth
+                        // Public POST routes
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/users/nearby-barbers").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/specialties").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
+
+                        // All GET routes are public
+                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
+
+                        // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
