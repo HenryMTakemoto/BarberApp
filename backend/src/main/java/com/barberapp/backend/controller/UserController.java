@@ -35,11 +35,11 @@ public class UserController {
     public ResponseEntity<List<UserDTO>> getNearbyBarbers(
             @RequestParam(name = "lat") Double lat,
             @RequestParam(name = "lng") Double lng,
-            @RequestParam(name = "radius", defaultValue = "3.0") Double radius) {
-        List<UserDTO> barbers = userService.getNearbyBarbers(lat, lng, radius);
-        return ResponseEntity.ok(barbers);
+            @RequestParam(name = "radius", defaultValue = "3.0") Double radius,
+            @RequestParam(name = "specialty", required = false) String specialty) {
+        return ResponseEntity.ok(
+                userService.getNearbyBarbers(lat, lng, radius, specialty));
     }
-
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
