@@ -11,7 +11,7 @@ public class UserDTO {
     private String name;
     private String email;
 
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // entra no registro,mas não volta nas respostas JSON
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     private String phoneNumber;
@@ -20,8 +20,6 @@ public class UserDTO {
     private Set<String> specialties;
     private AddressDTO address;
     private Double distanceKm;
-
-    // review variables
     private Double rating;
     private Long reviewCount;
 }
