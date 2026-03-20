@@ -34,7 +34,7 @@ public class BarberServiceService {
 
         BarberService service = BarberService.builder()
                 .name(dto.getName())
-                .durationMinutes(dto.getDurationMinutes())
+                .durationMinutes(dto.getDuration())
                 .price(dto.getPrice())
                 .barber(barber)
                 .build();
@@ -48,7 +48,7 @@ public class BarberServiceService {
                         HttpStatus.NOT_FOUND, "Service not found with id: " + serviceId));
 
         service.setName(dto.getName());
-        service.setDurationMinutes(dto.getDurationMinutes());
+        service.setDurationMinutes(dto.getDuration());
         service.setPrice(dto.getPrice());
 
         return convertToDTO(serviceRepository.save(service));
@@ -66,7 +66,7 @@ public class BarberServiceService {
         return ServiceDTO.builder()
                 .id(service.getId())
                 .name(service.getName())
-                .durationMinutes(service.getDurationMinutes())
+                .duration(service.getDurationMinutes()) // ← database = durationMinutes, DTO = duration
                 .price(service.getPrice())
                 .barberId(service.getBarber().getId())
                 .barberName(service.getBarber().getName())
