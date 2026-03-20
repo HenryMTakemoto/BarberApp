@@ -44,9 +44,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
+        System.out.println(">>> FILTER: " + request.getMethod()
+                + " " + request.getServletPath());
+        System.out.println(">>> AUTH HEADER: "
+                + request.getHeader("Authorization"));
+
         final String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println(">>> No valid auth header, passing through");
             filterChain.doFilter(request, response);
             return;
         }
@@ -54,31 +60,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             final String jwt = authHeader.substring(7);
             final String userEmail = jwtService.extractEmail(jwt);
+            System.out.println(">>> Extracted email: " + userEmail);
+            System.out.println(">>> Token expired: " + (userEmail == null));
 
             if (userEmail != null &&
                     SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 Optional<User> optionalUser = userRepository.findByEmail(userEmail);
+                System.out.println(">>> User found: " + optionalUser.isPresent());
 
-                if (optionalUser.isPresent() &&
-                        jwtService.isTokenValid(jwt, userEmail)) {
+                if (optionalUser.isPresent()) {
+                    boolean valid = jwtService.isTokenValid(jwt, userEmail);
+                    System.out.println(">>> Token valid: " + valid);
 
-                    User user = optionalUser.get();
-                    List<SimpleGrantedAuthority> authorities = List.of(
-                            new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
-                    );
-
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    user, null, authorities);
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    if (valid) {
+                        User user = optionalUser.get();
+                        List<SimpleGrantedAuthority> authorities = List.of(
+                                new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+                        UsernamePasswordAuthenticationToken authToken =
+                                new UsernamePasswordAuthenticationToken(
+                                        user, null, authorities);
+                        authToken.setDetails(
+                                new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                        System.out.println(">>> Authentication set for: " + userEmail);
+                    }
                 }
             }
         } catch (Exception e) {
-            // Token inválido — deixa o Spring rejeitar na camada de autorização
-            System.out.println("JWT Filter error: " + e.getMessage());
+            System.out.println(">>> JWT Filter error: " + e.getMessage());
+            e.printStackTrace();
         }
 
         filterChain.doFilter(request, response);

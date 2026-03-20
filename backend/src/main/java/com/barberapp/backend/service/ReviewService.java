@@ -27,33 +27,45 @@ public class ReviewService {
     // Create review
     public ReviewDTO create(ReviewDTO dto) {
 
+        System.out.println(">>> ReviewService.create called");
+        System.out.println(">>> clientId: " + dto.getClientId()
+                + " appointmentId: " + dto.getAppointmentId()
+                + " rating: " + dto.getRating());
 
-        // Validates rating
+        // Validate rating range
         if (dto.getRating() < 1 || dto.getRating() > 5) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Rating must be between 1 and 5");
         }
 
-        // Verify if the appointment exists and is completed
+        // Find appointment
         Appointment appointment = appointmentRepository
                 .findById(dto.getAppointmentId())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Appointment not found: " + dto.getAppointmentId()));
 
-        if (!appointment.getClient().getId().equals(dto.getClientId())) {
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "You can only review your own appointments");
-        }
+        System.out.println(">>> Appointment found - status: " + appointment.getStatus()
+                + " clientId: " + appointment.getClient().getId());
 
+        // Validate appointment is COMPLETED
         if (appointment.getStatus() != AppointmentStatus.COMPLETED) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Can only review COMPLETED appointments");
         }
 
-        // Verify if the appointment already has a review
+        // Validate client owns the appointment
+        if (!appointment.getClient().getId().equals(dto.getClientId())) {
+            System.out.println(">>> FORBIDDEN: appointment client "
+                    + appointment.getClient().getId()
+                    + " != dto clientId " + dto.getClientId());
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "You can only review your own appointments");
+        }
+
+        // Check appointment has not been reviewed yet
         if (reviewRepository.existsByAppointmentId(dto.getAppointmentId())) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
@@ -62,7 +74,8 @@ public class ReviewService {
 
         User client = userRepository.findById(dto.getClientId())
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Client not found: " + dto.getClientId()));
+                        HttpStatus.NOT_FOUND,
+                        "Client not found: " + dto.getClientId()));
 
         Review review = Review.builder()
                 .rating(dto.getRating())
@@ -72,7 +85,9 @@ public class ReviewService {
                 .appointment(appointment)
                 .build();
 
-        return convertToDTO(reviewRepository.save(review));
+        ReviewDTO result = convertToDTO(reviewRepository.save(review));
+        System.out.println(">>> Review created: " + result.getId());
+        return result;
     }
 
     // List all barber reviews
