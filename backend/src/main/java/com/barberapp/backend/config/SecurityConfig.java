@@ -45,6 +45,9 @@ public class SecurityConfig {
                         // All GET routes are public
                         .requestMatchers(HttpMethod.GET, "/**").permitAll()
 
+                        .requestMatchers(HttpMethod.POST, "/api/auth/google").permitAll()
+
+
                         // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
