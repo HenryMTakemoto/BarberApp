@@ -1,0 +1,15 @@
+export const C = {
+  bg: '#0A0A0A',
+  surface: '#141414',
+  card: '#1A1A1A',
+  border: '#2A2A2A',
+  gold: '#D4A843',
+  goldLight: '#F0C060',
+  goldDim: 'rgba(212,168,67,0.15)',
+  white: '#F5F5F5',
+  gray: '#8A8A8A',
+  grayDim: '#3A3A3A',
+  red: '#E05252',
+  green: '#52C08A',
+  blue: '#5299E0',
+};
