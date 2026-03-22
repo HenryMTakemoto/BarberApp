@@ -4,22 +4,20 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
 import { C } from '../theme/colors';
-import { enableScreens } from 'react-native-screens';
-enableScreens();
 
-// Screens (placeholders for now)
 import OnboardingScreen from '../screens/OnboardingScreen';
 import LoginScreen from '../screens/LoginScreen';
+import RegisterScreen from '../screens/RegisterScreen';
 import ExploreScreen from '../screens/ExploreScreen';
 import AppointmentsScreen from '../screens/AppointmentsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import RegisterScreen from '../screens/RegisterScreen';
 
 export type RootStackParamList = {
   Onboarding: undefined;
   Login: undefined;
   Register: undefined;
   MainTabs: undefined;
+  Explore: undefined;
   BarberProfile: { barber: any };
   Booking: { barber: any; service: any };
   Confirmation: { barber: any; service: any; day: string; time: string };
@@ -49,17 +47,26 @@ function MainTabs() {
       <Tab.Screen
         name="Explore"
         component={ExploreScreen}
-        options={{ tabBarLabel: 'Radar', tabBarIcon: ({ color }) => <Text style={{ fontSize: 22 }}>🔍</Text> }}
+        options={{
+          tabBarLabel: 'Radar',
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>🔍</Text>,
+        }}
       />
       <Tab.Screen
         name="Appointments"
         component={AppointmentsScreen}
-        options={{ tabBarLabel: 'Agenda', tabBarIcon: ({ color }) => <Text style={{ fontSize: 22 }}>📅</Text> }}
+        options={{
+          tabBarLabel: 'Agenda',
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>📅</Text>,
+        }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ tabBarLabel: 'Perfil', tabBarIcon: ({ color }) => <Text style={{ fontSize: 22 }}>👤</Text> }}
+        options={{
+          tabBarLabel: 'Perfil',
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>👤</Text>,
+        }}
       />
     </Tab.Navigator>
   );
@@ -70,8 +77,8 @@ export default function Navigation() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="BarberProfile" component={ProfileScreen} />
         <Stack.Screen name="Booking" component={ProfileScreen} />
