@@ -11,6 +11,7 @@ import RegisterScreen from '../screens/RegisterScreen';
 import ExploreScreen from '../screens/ExploreScreen';
 import AppointmentsScreen from '../screens/AppointmentsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import BarberProfileScreen from '../screens/BarberProfileScreen';
 
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -80,11 +81,11 @@ export default function Navigation() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
-        <Stack.Screen name="BarberProfile" component={ProfileScreen} />
         <Stack.Screen name="Booking" component={ProfileScreen} />
         <Stack.Screen name="Confirmation" component={ProfileScreen} />
         <Stack.Screen name="Review" component={ProfileScreen} />
         <Stack.Screen name="BarberSetup" component={ProfileScreen} />
+        <Stack.Screen name="BarberProfile" component={BarberProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
