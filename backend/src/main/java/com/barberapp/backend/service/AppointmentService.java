@@ -3,10 +3,10 @@ package com.barberapp.backend.service;
 import com.barberapp.backend.dto.AppointmentDTO;
 import com.barberapp.backend.model.Appointment;
 import com.barberapp.backend.model.AppointmentStatus;
+import com.barberapp.backend.model.BarberService;
 import com.barberapp.backend.model.User;
-import com.barberapp.backend.model.Specialty;
 import com.barberapp.backend.repository.AppointmentRepository;
-import com.barberapp.backend.repository.SpecialtyRepository;
+import com.barberapp.backend.repository.ServiceRepository;
 import com.barberapp.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,61 +24,44 @@ public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
     private final UserRepository userRepository;
-    private final SpecialtyRepository specialtyRepository;
+    private final ServiceRepository barberServiceRepository;
 
     public AppointmentDTO createAppointment(AppointmentDTO dto) {
-        // 1. Validar se o Cliente (User) existe no banco
+        // 1. Validate client exists
         User client = userRepository.findById(dto.getClientId())
-                .orElseThrow(() -> new RuntimeException("Client not found with ID: " + dto.getClientId()));
+                .orElseThrow(() -> new RuntimeException("Client not found: " + dto.getClientId()));
 
-        // 2. Validar se o Barbeiro (User) existe no banco
+        // 2. Validate barber exists
         User barber = userRepository.findById(dto.getBarberId())
-                .orElseThrow(() -> new RuntimeException("Barber not found with ID: " + dto.getBarberId()));
+                .orElseThrow(() -> new RuntimeException("Barber not found: " + dto.getBarberId()));
 
-        // 3. Validar se a Especialidade existe
-        Specialty specialty = specialtyRepository.findById(dto.getSpecialtyId())
-                .orElseThrow(() -> new RuntimeException("Specialty not found with ID: " + dto.getSpecialtyId()));
+        // 3. Validate service exists — uses serviceId instead of specialtyId
+        BarberService service = barberServiceRepository.findById(dto.getServiceId())
+                .orElseThrow(() -> new RuntimeException("Service not found: " + dto.getServiceId()));
 
-        // 4. Transformar DTO em Entidade (Montar o objeto para salvar)
+        // 4. Build appointment entity
         Appointment appointment = Appointment.builder()
                 .date(dto.getDate())
-                .status(AppointmentStatus.PENDING) // Todo agendamento começa como Pendente
+                .status(AppointmentStatus.PENDING)
                 .client(client)
                 .barber(barber)
-                .specialty(specialty)
+                .service(service)
                 .build();
 
-        // 5. Salvar no Banco de Dados
-        Appointment savedAppointment = appointmentRepository.save(appointment);
+        // 5. Save to database
+        Appointment saved = appointmentRepository.save(appointment);
 
-        // 6. Devolver as informações confirmadas (convertendo de volta para DTO)
-        return convertToDTO(savedAppointment);
+        // 6. Return DTO
+        return convertToDTO(saved);
     }
 
     public List<AppointmentDTO> listAllAppointments() {
-        // Busca tudo do banco e converte cada um para DTO
         return appointmentRepository.findAll().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    // Método auxiliar para não repetir código
-    private AppointmentDTO convertToDTO(Appointment appointment) {
-        return AppointmentDTO.builder()
-                .id(appointment.getId())
-                .date(appointment.getDate())
-                .status(appointment.getStatus())
-                .clientId(appointment.getClient().getId())
-                .clientName(appointment.getClient().getName())
-                .barberId(appointment.getBarber().getId())
-                .barberName(appointment.getBarber().getName())
-                .specialtyId(appointment.getSpecialty().getId())
-                .specialtyName(appointment.getSpecialty().getName())
-                .build();
-    }
-
-
-    public List<AppointmentDTO> getByClientId(Long clientId) { // Agendamentos do cliente
+    public List<AppointmentDTO> getByClientId(Long clientId) {
         return appointmentRepository
                 .findByClientIdOrderByDateDesc(clientId)
                 .stream()
@@ -86,14 +69,15 @@ public class AppointmentService {
                 .collect(Collectors.toList());
     }
 
-    public List<AppointmentDTO> getByBarberId(Long barberId) { // Agenda do barbeiro
+    public List<AppointmentDTO> getByBarberId(Long barberId) {
         return appointmentRepository
                 .findByBarberIdOrderByDateAsc(barberId)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
-    public List<AppointmentDTO> getByBarberIdAndDate(Long barberId, LocalDate date) { // Agenda por dia
+
+    public List<AppointmentDTO> getByBarberIdAndDate(Long barberId, LocalDate date) {
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.atTime(23, 59, 59);
         return appointmentRepository
@@ -106,9 +90,25 @@ public class AppointmentService {
     public AppointmentDTO updateStatus(Long id, AppointmentStatus newStatus) {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Appointment not found with id: " + id));
+                        HttpStatus.NOT_FOUND, "Appointment not found: " + id));
 
         appointment.setStatus(newStatus);
         return convertToDTO(appointmentRepository.save(appointment));
+    }
+
+    private AppointmentDTO convertToDTO(Appointment appointment) {
+        return AppointmentDTO.builder()
+                .id(appointment.getId())
+                .date(appointment.getDate())
+                .status(appointment.getStatus())
+                .clientId(appointment.getClient().getId())
+                .clientName(appointment.getClient().getName())
+                .barberId(appointment.getBarber().getId())
+                .barberName(appointment.getBarber().getName())
+                .serviceId(appointment.getService().getId())
+                .serviceName(appointment.getService().getName())
+                .servicePrice(appointment.getService().getPrice())
+                .serviceDuration(appointment.getService().getDurationMinutes())
+                .build();
     }
 }

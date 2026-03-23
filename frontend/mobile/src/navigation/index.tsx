@@ -13,6 +13,7 @@ import AppointmentsScreen from '../screens/AppointmentsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import BarberProfileScreen from '../screens/BarberProfileScreen';
 import BookingScreen from '../screens/BookingScreen';
+import ConfirmationScreen from '../screens/ConfirmationScreen';
 
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -84,7 +85,7 @@ export default function Navigation() {
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="BarberProfile" component={BarberProfileScreen} />
         <Stack.Screen name="Booking" component={BookingScreen} />
-        <Stack.Screen name="Confirmation" component={ProfileScreen} />
+        <Stack.Screen name="Confirmation" component={ConfirmationScreen} />        
         <Stack.Screen name="Review" component={ProfileScreen} />
         <Stack.Screen name="BarberSetup" component={ProfileScreen} />
       </Stack.Navigator>

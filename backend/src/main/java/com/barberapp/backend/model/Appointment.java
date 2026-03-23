@@ -7,11 +7,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
-@Data // Gera Getters, Setters, toString...
-@Builder // Permite criar objetos de forma fluida
-@NoArgsConstructor // Obrigatório para o JPA/Hibernate
+@Data
+@Builder
+@NoArgsConstructor
 @AllArgsConstructor
-@Entity // Diz que isso é uma tabela no banco
+@Entity
 @Table(name = "appointments")
 public class Appointment {
 
@@ -20,26 +20,23 @@ public class Appointment {
     private Long id;
 
     @Column(nullable = false)
-    private LocalDateTime date; // Data e Hora do corte
+    private LocalDateTime date;
 
-    @Enumerated(EnumType.STRING) // Salva no banco como texto ("PENDING") e não número (0)
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AppointmentStatus status;
 
-    // RELACIONAMENTOS (Chaves Estrangeiras)
-
-    // Quem vai cortar o cabelo? (Cliente)
-    @ManyToOne(fetch = FetchType.LAZY) // Lazy = só carrega os dados do cliente se a gente pedir
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
     private User client;
 
-    // Quem vai realizar o corte? (Barbeiro)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "barber_id", nullable = false)
     private User barber;
 
-    // Qual o serviço? (Ex: Barba, Cabelo)
+    // Changed from Specialty to BarberService
+    // Service has price and duration — more complete than specialty
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "specialty_id", nullable = false)
-    private Specialty specialty;
+    private BarberService service;
 }

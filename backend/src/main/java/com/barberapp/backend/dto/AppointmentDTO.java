@@ -1,6 +1,7 @@
 package com.barberapp.backend.dto;
 
 import com.barberapp.backend.model.AppointmentStatus;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
@@ -15,17 +16,21 @@ import java.time.LocalDateTime;
 public class AppointmentDTO {
 
     private Long id;
+
+    // Tell Jackson exactly how to parse the date string from frontend
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime date;
+
     private AppointmentStatus status;
 
-    // Para criar um agendamento, precisamos apenas dos IDs
     private Long clientId;
     private Long barberId;
-    private Long specialtyId;
+    private Long serviceId;
 
-    // Campos opcionais para facilitar a leitura no Frontend (Visualização)
-    // Opcional: preenchemos isso na hora de devolver a resposta pro app
+    // Response fields
     private String clientName;
     private String barberName;
-    private String specialtyName;
+    private String serviceName;
+    private Double servicePrice;
+    private Integer serviceDuration;
 }
