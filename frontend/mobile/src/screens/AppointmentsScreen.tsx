@@ -193,6 +193,7 @@ export default function AppointmentsScreen({ navigation }: Props) {
               navigation.navigate('Review', {
                 barber: { id: item.barberId, name: item.barberName, avatarUrl: null },
                 service: item.serviceName,
+                appointmentId: item.id,
               })
             }
           >

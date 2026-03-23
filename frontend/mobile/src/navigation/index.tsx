@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { C } from '../theme/colors';
 
 import OnboardingScreen from '../screens/OnboardingScreen';
@@ -14,6 +15,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import BarberProfileScreen from '../screens/BarberProfileScreen';
 import BookingScreen from '../screens/BookingScreen';
 import ConfirmationScreen from '../screens/ConfirmationScreen';
+import ReviewScreen from '../screens/ReviewScreen';
 
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -25,7 +27,7 @@ export type RootStackParamList = {
   BarberProfile: { barber: any };
   Booking: { barber: any; service: any };
   Confirmation: { barber: any; service: any; day: string; time: string; dateString: string };
-  Review: { barber: any; service: string };
+  Review: { barber: any; service: string; appointmentId: number };  
   BarberSetup: undefined;
 };
 
@@ -33,6 +35,9 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
 function MainTabs() {
+  // Gets Android navigation bar height to avoid overlap
+  const insets = useSafeAreaInsets();
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -40,8 +45,8 @@ function MainTabs() {
         tabBarStyle: {
           backgroundColor: C.surface,
           borderTopColor: C.border,
-          height: 70,
-          paddingBottom: 12,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom || 12,
         },
         tabBarActiveTintColor: C.gold,
         tabBarInactiveTintColor: C.gray,
@@ -87,7 +92,7 @@ export default function Navigation() {
         <Stack.Screen name="BarberProfile" component={BarberProfileScreen} />
         <Stack.Screen name="Booking" component={BookingScreen} />
         <Stack.Screen name="Confirmation" component={ConfirmationScreen} />
-        <Stack.Screen name="Review" component={ProfileScreen} />
+        <Stack.Screen name="Review" component={ReviewScreen} />
         <Stack.Screen name="BarberSetup" component={ProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>
