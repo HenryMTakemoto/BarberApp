@@ -7,6 +7,7 @@ import {
   TextInput,
   TouchableOpacity,
   RefreshControl,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -22,7 +23,7 @@ const DEFAULT_LAT = -23.5505;
 const DEFAULT_LNG = -46.6333;
 const DEFAULT_RADIUS = 10;
 
-const QUICK_FILTERS = ['Degradê', 'Barba', 'Afro', 'Navalhado', 'Tranças'];
+const QUICK_FILTERS = ['Degradê', 'Barba', 'Afro', 'Navalhado', 'Tranças', 'Coloração', 'Clássico'];
 
 export default function ExploreScreen({ navigation }: Props) {
   const [barbers, setBarbers] = useState<any[]>([]);
@@ -43,11 +44,9 @@ export default function ExploreScreen({ navigation }: Props) {
   const fetchBarbers = useCallback(async (specialty?: string | null) => {
     try {
       let url = `http://192.168.3.56:8080/api/users/nearby-barbers?lat=${DEFAULT_LAT}&lng=${DEFAULT_LNG}&radius=${DEFAULT_RADIUS}`;
-
       if (specialty) {
         url += `&specialty=${encodeURIComponent(specialty)}`;
       }
-
       const response = await fetch(url);
       const data = await response.json();
       setBarbers(data);
@@ -104,7 +103,6 @@ export default function ExploreScreen({ navigation }: Props) {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View>
-            {/* Dynamic greeting — changes based on device time */}
             <Text style={styles.greeting}>{getGreeting()}</Text>
             <Text style={styles.title}>Encontre seu barbeiro</Text>
           </View>
@@ -127,8 +125,12 @@ export default function ExploreScreen({ navigation }: Props) {
           )}
         </View>
 
-        {/* Quick filters */}
-        <View style={styles.filtersRow}>
+        {/* Quick filters — horizontal scroll */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filtersRow}
+        >
           <TouchableOpacity
             onPress={() => setActiveFilter(null)}
             style={[styles.filterChip, !activeFilter && styles.filterChipActive]}
@@ -149,7 +151,7 @@ export default function ExploreScreen({ navigation }: Props) {
               </Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
 
         {/* Result count */}
         {!loading && (
@@ -266,9 +268,8 @@ const styles = StyleSheet.create({
   filtersRow: {
     flexDirection: 'row',
     gap: 8,
-    flexWrap: 'nowrap',
-    overflow: 'hidden',
     marginBottom: 10,
+    paddingRight: 20,
   },
   filterChip: {
     paddingHorizontal: 14,
