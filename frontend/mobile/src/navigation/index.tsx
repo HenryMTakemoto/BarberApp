@@ -21,6 +21,7 @@ export type RootStackParamList = {
   Register: undefined;
   MainTabs: undefined;
   Explore: undefined;
+  Appointments: undefined;
   BarberProfile: { barber: any };
   Booking: { barber: any; service: any };
   Confirmation: { barber: any; service: any; day: string; time: string; dateString: string };
@@ -85,7 +86,7 @@ export default function Navigation() {
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="BarberProfile" component={BarberProfileScreen} />
         <Stack.Screen name="Booking" component={BookingScreen} />
-        <Stack.Screen name="Confirmation" component={ConfirmationScreen} />        
+        <Stack.Screen name="Confirmation" component={ConfirmationScreen} />
         <Stack.Screen name="Review" component={ProfileScreen} />
         <Stack.Screen name="BarberSetup" component={ProfileScreen} />
       </Stack.Navigator>
