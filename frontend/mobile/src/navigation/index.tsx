@@ -12,6 +12,7 @@ import ExploreScreen from '../screens/ExploreScreen';
 import AppointmentsScreen from '../screens/AppointmentsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import BarberProfileScreen from '../screens/BarberProfileScreen';
+import BookingScreen from '../screens/BookingScreen';
 
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -21,7 +22,7 @@ export type RootStackParamList = {
   Explore: undefined;
   BarberProfile: { barber: any };
   Booking: { barber: any; service: any };
-  Confirmation: { barber: any; service: any; day: string; time: string };
+  Confirmation: { barber: any; service: any; day: string; time: string; dateString: string };
   Review: { barber: any; service: string };
   BarberSetup: undefined;
 };
@@ -81,11 +82,11 @@ export default function Navigation() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
-        <Stack.Screen name="Booking" component={ProfileScreen} />
+        <Stack.Screen name="BarberProfile" component={BarberProfileScreen} />
+        <Stack.Screen name="Booking" component={BookingScreen} />
         <Stack.Screen name="Confirmation" component={ProfileScreen} />
         <Stack.Screen name="Review" component={ProfileScreen} />
         <Stack.Screen name="BarberSetup" component={ProfileScreen} />
-        <Stack.Screen name="BarberProfile" component={BarberProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
