@@ -171,6 +171,17 @@ public class AvailabilityService {
         allSlots.removeAll(occupiedByBlocks);
 
         // Step 8: Sort and return available slots
+        if (date.equals(LocalDate.now())) {
+            LocalTime currentTime = LocalTime.now();
+            
+            allSlots.removeIf(slot -> {
+                LocalTime slotTime = LocalTime.parse(slot, TIME_FMT);
+                return slotTime.isBefore(currentTime);
+            });
+        }
+        // -----------------------------------------------------------------------------
+
+        // Step 8: Sort and return available slots
         allSlots.sort(Comparator.naturalOrder());
 
         return allSlots;
