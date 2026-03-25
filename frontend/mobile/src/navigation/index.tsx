@@ -15,30 +15,39 @@ import ProfileScreen from '../screens/ProfileScreen';
 import BarberProfileScreen from '../screens/BarberProfileScreen';
 import BookingScreen from '../screens/BookingScreen';
 import ConfirmationScreen from '../screens/ConfirmationScreen';
-import BarberSetupScreen from '../screens/BarberSetupScreen';
 import ReviewScreen from '../screens/ReviewScreen';
+import BarberSetupScreen from '../screens/BarberSetupScreen';
+import BarberHomeScreen from '../screens/barber/BarberHomeScreen';
+import BarberAgendaScreen from '../screens/barber/BarberAgendaScreen';
+import BarberGanhosScreen from '../screens/barber/BarberGanhosScreen';
+import BarberProfileEditScreen from '../screens/barber/BarberProfileEditScreen';
+import BarberServicesScreen from '../screens/barber/BarberServicesScreen';
+import BarberHorariosScreen from '../screens/barber/BarberHorariosScreen';
+import BarberEditInfoScreen from '../screens/barber/BarberEditInfoScreen';
 
 export type RootStackParamList = {
   Onboarding: undefined;
   Login: undefined;
   Register: undefined;
   MainTabs: undefined;
+  BarberTabs: undefined;
   Explore: undefined;
   Appointments: undefined;
   BarberProfile: { barber: any };
   Booking: { barber: any; service: any };
   Confirmation: { barber: any; service: any; day: string; time: string; dateString: string };
-  Review: { barber: any; service: string; appointmentId: number };  
+  Review: { barber: any; service: string; appointmentId: number };
   BarberSetup: undefined;
+  BarberServices: undefined;
+  BarberHorarios: undefined;
+  BarberEditInfo: { section?: 'bio' | 'address' };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator();
 
 function MainTabs() {
-  // Gets Android navigation bar height to avoid overlap
   const insets = useSafeAreaInsets();
-
   return (
     <Tab.Navigator
       screenOptions={{
@@ -82,6 +91,59 @@ function MainTabs() {
   );
 }
 
+function BarberTabs() {
+  const insets = useSafeAreaInsets();
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: C.surface,
+          borderTopColor: C.border,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom || 12,
+        },
+        tabBarActiveTintColor: C.gold,
+        tabBarInactiveTintColor: C.gray,
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
+      }}
+    >
+      <Tab.Screen
+        name="BarberHome"
+        component={BarberHomeScreen}
+        options={{
+          tabBarLabel: 'Início',
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>🏠</Text>,
+        }}
+      />
+      <Tab.Screen
+        name="BarberAgenda"
+        component={BarberAgendaScreen}
+        options={{
+          tabBarLabel: 'Agenda',
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>📅</Text>,
+        }}
+      />
+      <Tab.Screen
+        name="BarberGanhos"
+        component={BarberGanhosScreen}
+        options={{
+          tabBarLabel: 'Ganhos',
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>💰</Text>,
+        }}
+      />
+      <Tab.Screen
+        name="BarberProfileEdit"
+        component={BarberProfileEditScreen}
+        options={{
+          tabBarLabel: 'Perfil',
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>👤</Text>,
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
 export default function Navigation() {
   return (
     <NavigationContainer>
@@ -90,12 +152,16 @@ export default function Navigation() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
+        <Stack.Screen name="BarberTabs" component={BarberTabs} />
         <Stack.Screen name="BarberProfile" component={BarberProfileScreen} />
         <Stack.Screen name="Booking" component={BookingScreen} />
         <Stack.Screen name="Confirmation" component={ConfirmationScreen} />
         <Stack.Screen name="Review" component={ReviewScreen} />
-        <Stack.Screen name="BarberSetup" component={BarberSetupScreen} />      
-        </Stack.Navigator>
+        <Stack.Screen name="BarberSetup" component={BarberSetupScreen} />
+        <Stack.Screen name="BarberServices" component={BarberServicesScreen} />
+        <Stack.Screen name="BarberHorarios" component={BarberHorariosScreen} />
+        <Stack.Screen name="BarberEditInfo" component={BarberEditInfoScreen} />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }

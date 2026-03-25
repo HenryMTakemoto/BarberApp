@@ -33,7 +33,6 @@ export default function LoginScreen({ navigation }: Props) {
     try {
       setLoading(true);
 
-      // POST /api/auth/login using native fetch (more reliable than axios for React Native)
       const response = await fetch('http://192.168.3.56:8080/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -51,8 +50,12 @@ export default function LoginScreen({ navigation }: Props) {
       await AsyncStorage.setItem('token', data.token);
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
 
-      // Navigate based on role
-      navigation.replace('MainTabs');
+      // Redirect based on role — BARBER goes to barber dashboard
+      if (data.user.role === 'BARBER') {
+        navigation.replace('BarberTabs');
+      } else {
+        navigation.replace('MainTabs');
+      }
 
     } catch (error: any) {
       Alert.alert('Erro', 'Não foi possível conectar ao servidor.');
