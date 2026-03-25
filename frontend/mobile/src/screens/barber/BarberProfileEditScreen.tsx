@@ -15,6 +15,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { C } from '../../theme/colors';
 import Avatar from '../../components/Avatar';
 import GoldButton from '../../components/GoldButton';
+import apiRequest from '../../services/api';
+
 
 export default function BarberProfileEditScreen({ navigation }: any) {
   const [user, setUser] = useState<any>(null);
@@ -33,9 +35,8 @@ export default function BarberProfileEditScreen({ navigation }: any) {
       setIsOnline(u.isOnline !== false); // default to true if undefined
 
       // Fetch barber services
-      const response = await fetch(
-        `http://192.168.3.56:8080/api/barbers/${u.id}/services`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await apiRequest(
+        `/barbers/${u.id}/services`
       );
       const data = await response.json();
       setServices(Array.isArray(data) ? data : []);
@@ -95,7 +96,7 @@ export default function BarberProfileEditScreen({ navigation }: any) {
       formData.append('file', { uri, name: filename, type } as any);
 
       // 1. Upload file
-      const uploadRes = await fetch('http://192.168.3.56:8080/api/upload', {
+      const uploadRes = await apiRequest('/upload', {
         method: 'POST',
         body: formData,
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -106,11 +107,10 @@ export default function BarberProfileEditScreen({ navigation }: any) {
       const imageUrl = data.url;
 
       // 2. Update user profile
-      await fetch(`http://192.168.3.56:8080/api/users/${user.id}`, {
+      await apiRequest(`/users/${user.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ avatarUrl: imageUrl })
       });
@@ -129,11 +129,10 @@ export default function BarberProfileEditScreen({ navigation }: any) {
     setIsOnline(val);
     try {
       const token = await AsyncStorage.getItem('token');
-      await fetch(`http://192.168.3.56:8080/api/users/${user.id}`, {
+      await apiRequest(`/users/${user.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ isOnline: val })
       });

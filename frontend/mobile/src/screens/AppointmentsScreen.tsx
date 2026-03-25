@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../navigation';
 import { C } from '../theme/colors';
 import Avatar from '../components/Avatar';
+import apiRequest from '../services/api';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Appointments'>;
@@ -22,10 +23,10 @@ type Props = {
 
 // Status display config — color and label for each status
 const STATUS_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
-  PENDING:   { color: C.gold,  bg: 'rgba(212,168,67,0.15)',  label: 'Pendente'   },
-  CONFIRMED: { color: C.green, bg: 'rgba(82,192,138,0.15)',  label: 'Confirmado' },
-  COMPLETED: { color: C.gray,  bg: 'rgba(138,138,138,0.15)', label: 'Concluído'  },
-  CANCELLED: { color: C.red,   bg: 'rgba(224,82,82,0.15)',   label: 'Cancelado'  },
+  PENDING: { color: C.gold, bg: 'rgba(212,168,67,0.15)', label: 'Pendente' },
+  CONFIRMED: { color: C.green, bg: 'rgba(82,192,138,0.15)', label: 'Confirmado' },
+  COMPLETED: { color: C.gray, bg: 'rgba(138,138,138,0.15)', label: 'Concluído' },
+  CANCELLED: { color: C.red, bg: 'rgba(224,82,82,0.15)', label: 'Cancelado' },
 };
 
 export default function AppointmentsScreen({ navigation }: Props) {
@@ -45,11 +46,8 @@ export default function AppointmentsScreen({ navigation }: Props) {
 
       const user = JSON.parse(userJson);
 
-      const response = await fetch(
-        `http://192.168.3.56:8080/api/appointments/client/${user.id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      const response = await apiRequest(
+        `/appointments/client/${user.id}`
       );
 
       const data = await response.json();
@@ -114,13 +112,12 @@ export default function AppointmentsScreen({ navigation }: Props) {
           onPress: async () => {
             try {
               const token = await AsyncStorage.getItem('token');
-              await fetch(
-                `http://192.168.3.56:8080/api/appointments/${appointmentId}/status`,
+              await apiRequest(
+                `/appointments/${appointmentId}/status`,
                 {
                   method: 'PATCH',
                   headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
                   },
                   body: JSON.stringify({ status: 'CANCELLED' }),
                 }
@@ -187,18 +184,28 @@ export default function AppointmentsScreen({ navigation }: Props) {
 
         {/* Review button for completed appointments */}
         {tab === 'history' && item.status === 'COMPLETED' && (
-          <TouchableOpacity
-            style={styles.reviewButton}
-            onPress={() =>
-              navigation.navigate('Review', {
-                barber: { id: item.barberId, name: item.barberName, avatarUrl: null },
-                service: item.serviceName,
-                appointmentId: item.id,
-              })
-            }
-          >
-            <Text style={styles.reviewButtonText}>⭐ Avaliar atendimento</Text>
-          </TouchableOpacity>
+          <View style={{ marginTop: 12 }}>
+            {!item.isReviewed && !item.reviewId ? (
+              <TouchableOpacity
+                style={styles.reviewButton}
+                onPress={() =>
+                  navigation.navigate('Review', {
+                    barber: { id: item.barberId, name: item.barberName, avatarUrl: null },
+                    service: item.serviceName,
+                    appointmentId: item.id,
+                  })
+                }
+              >
+                <Text style={styles.reviewButtonText}>⭐ Avaliar atendimento</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={[styles.reviewButton, { backgroundColor: 'transparent', borderColor: C.border }]}>
+                <Text style={{ color: C.gray, fontWeight: '600', fontSize: 13 }}>
+                  ⭐⭐⭐⭐⭐ Já Avaliado
+                </Text>
+              </View>
+            )}
+          </View>
         )}
       </View>
     );
@@ -394,7 +401,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   reviewButton: {
-    marginTop: 12,
     paddingVertical: 10,
     borderRadius: 10,
     backgroundColor: C.goldDim,

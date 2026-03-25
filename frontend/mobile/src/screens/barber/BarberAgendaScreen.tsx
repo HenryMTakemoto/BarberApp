@@ -13,6 +13,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../../theme/colors';
 import Avatar from '../../components/Avatar';
+import apiRequest from '../../services/api';
+
 
 export default function BarberAgendaScreen({ navigation }: any) {
   const [selectedDay, setSelectedDay] = useState(0);
@@ -28,11 +30,16 @@ export default function BarberAgendaScreen({ navigation }: any) {
     return Array.from({ length: 30 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() + i);
+      
+      const year = date.getFullYear();
+      const monthNum = String(date.getMonth() + 1).padStart(2, '0');
+      const dayNum = String(date.getDate()).padStart(2, '0');
+      
       return {
         weekday: weekdays[date.getDay()],
         day: date.getDate(),
         month: months[date.getMonth()],
-        dateString: date.toISOString().split('T')[0],
+        dateString: `${year}-${monthNum}-${dayNum}`,
       };
     });
   };
@@ -51,9 +58,8 @@ export default function BarberAgendaScreen({ navigation }: any) {
       const dateString = days[dayIndex].dateString;
 
       // GET /api/appointments/barber/{id}/date/{date}
-      const response = await fetch(
-        `http://192.168.3.56:8080/api/appointments/barber/${u.id}/date/${dateString}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await apiRequest(
+        `/appointments/barber/${u.id}/date/${dateString}`
       );
       const data = await response.json();
       setAppointments(Array.isArray(data) ? data : []);
@@ -88,13 +94,12 @@ export default function BarberAgendaScreen({ navigation }: any) {
   const handleUpdateStatus = async (appointmentId: number, status: string) => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await fetch(
-        `http://192.168.3.56:8080/api/appointments/${appointmentId}/status`,
+      const response = await apiRequest(
+        `/appointments/${appointmentId}/status`,
         {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ status }),
         }

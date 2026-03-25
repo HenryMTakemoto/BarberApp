@@ -14,6 +14,7 @@ import { RootStackParamList } from '../navigation';
 import { C } from '../theme/colors';
 import GoldButton from '../components/GoldButton';
 import Avatar from '../components/Avatar';
+import apiRequest from '../services/api';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Booking'>;
@@ -28,11 +29,16 @@ const generateNextDays = () => {
   for (let i = 0; i < 30; i++) {
     const date = new Date();
     date.setDate(date.getDate() + i);
+    
+    const year = date.getFullYear();
+    const monthNum = String(date.getMonth() + 1).padStart(2, '0');
+    const dayNum = String(date.getDate()).padStart(2, '0');
+    
     days.push({
       weekday: weekdays[date.getDay()],
       day: date.getDate(),
       month: months[date.getMonth()],
-      dateString: date.toISOString().split('T')[0],
+      dateString: `${year}-${monthNum}-${dayNum}`,
     });
   }
   return days;
@@ -52,8 +58,8 @@ export default function BookingScreen({ navigation, route }: Props) {
       setLoadingSlots(true);
       setSelectedTime(null);
       try {
-        const response = await fetch(
-          `http://192.168.3.56:8080/api/barbers/${barber.id}/availability/slots?date=${selectedDay.dateString}`
+        const response = await apiRequest(
+          `/barbers/${barber.id}/availability/slots?date=${selectedDay.dateString}`
         );
         const data = await response.json();
         // Safety check — ensure data is always an array

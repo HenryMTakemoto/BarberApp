@@ -7,6 +7,10 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -16,6 +20,7 @@ import { RootStackParamList } from '../navigation';
 import { C } from '../theme/colors';
 import GoldButton from '../components/GoldButton';
 import Avatar from '../components/Avatar';
+import apiRequest from '../services/api';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Review'>;
@@ -77,11 +82,10 @@ export default function ReviewScreen({ navigation, route }: Props) {
         .join(' · ');
 
       // POST /api/reviews — requires appointmentId, clientId, barberId, rating
-      const response = await fetch('http://192.168.3.56:8080/api/reviews', {
+      const response = await apiRequest('/reviews', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           barberId: barber.id,
@@ -131,113 +135,120 @@ export default function ReviewScreen({ navigation, route }: Props) {
   const tags = rating >= 4 ? POSITIVE_TAGS : rating > 0 ? NEGATIVE_TAGS : [];
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          >
-            <Text style={styles.backText}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>Avaliar atendimento</Text>
-        </View>
-      </SafeAreaView>
-
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Barber info card */}
-        <View style={styles.section}>
-          <View style={styles.barberCard}>
-            <Avatar url={barber.avatarUrl} size={56} borderColor={C.gold} />
-            <View style={styles.barberInfo}>
-              <Text style={styles.barberName}>{barber.name}</Text>
-              <Text style={styles.serviceName}>{service}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Star rating */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Como foi seu atendimento?</Text>
-          <View style={styles.starsRow}>
-            {[1, 2, 3, 4, 5].map((star) => (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={{ flex: 1 }}>
+          <SafeAreaView>
+            <View style={styles.header}>
               <TouchableOpacity
-                key={star}
-                onPress={() => {
-                  setRating(star);
-                  setSelectedTags([]);
-                }}
-                activeOpacity={0.7}
+                onPress={() => navigation.goBack()}
+                style={styles.backButton}
               >
-                <Text style={[
-                  styles.star,
-                  rating >= star && styles.starActive,
-                ]}>
-                  {rating >= star ? '★' : '☆'}
-                </Text>
+                <Text style={styles.backText}>←</Text>
               </TouchableOpacity>
-            ))}
-          </View>
+              <Text style={styles.title}>Avaliar atendimento</Text>
+            </View>
+          </SafeAreaView>
 
-          {rating > 0 && (
-            <Text style={styles.ratingLabel}>{RATING_LABELS[rating]}</Text>
-          )}
-        </View>
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {/* Barber info card */}
+            <View style={styles.section}>
+              <View style={styles.barberCard}>
+                <Avatar url={barber.avatarUrl} size={56} borderColor={C.gold} />
+                <View style={styles.barberInfo}>
+                  <Text style={styles.barberName}>{barber.name}</Text>
+                  <Text style={styles.serviceName}>{service}</Text>
+                </View>
+              </View>
+            </View>
 
-        {/* Quick tags */}
-        {tags.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>
-              {rating >= 4 ? 'O que você mais gostou?' : 'O que poderia melhorar?'}
-            </Text>
-            <View style={styles.tagsRow}>
-              {tags.map((tag) => {
-                const active = selectedTags.includes(tag);
-                return (
+            {/* Star rating */}
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Como foi seu atendimento?</Text>
+              <View style={styles.starsRow}>
+                {[1, 2, 3, 4, 5].map((star) => (
                   <TouchableOpacity
-                    key={tag}
-                    onPress={() => toggleTag(tag)}
-                    style={[styles.tag, active && styles.tagActive]}
-                    activeOpacity={0.8}
+                    key={star}
+                    onPress={() => {
+                      setRating(star);
+                      setSelectedTags([]);
+                    }}
+                    activeOpacity={0.7}
                   >
-                    <Text style={[styles.tagText, active && styles.tagTextActive]}>
-                      {rating >= 4 ? '👍' : '👎'} {tag}
+                    <Text style={[
+                      styles.star,
+                      rating >= star && styles.starActive,
+                    ]}>
+                      {rating >= star ? '★' : '☆'}
                     </Text>
                   </TouchableOpacity>
-                );
-              })}
+                ))}
+              </View>
+
+              {rating > 0 && (
+                <Text style={styles.ratingLabel}>{RATING_LABELS[rating]}</Text>
+              )}
             </View>
+
+            {/* Quick tags */}
+            {tags.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>
+                  {rating >= 4 ? 'O que você mais gostou?' : 'O que poderia melhorar?'}
+                </Text>
+                <View style={styles.tagsRow}>
+                  {tags.map((tag) => {
+                    const active = selectedTags.includes(tag);
+                    return (
+                      <TouchableOpacity
+                        key={tag}
+                        onPress={() => toggleTag(tag)}
+                        style={[styles.tag, active && styles.tagActive]}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={[styles.tagText, active && styles.tagTextActive]}>
+                          {rating >= 4 ? '👍' : '👎'} {tag}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
+            {/* Comment input */}
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Comentário (opcional)</Text>
+              <TextInput
+                placeholder="Conte como foi o atendimento..."
+                placeholderTextColor={C.gray}
+                value={comment}
+                onChangeText={setComment}
+                multiline
+                numberOfLines={4}
+                style={styles.commentInput}
+                textAlignVertical="top"
+              />
+            </View>
+
+            <View style={{ height: 120 }} />
+          </ScrollView>
+
+          {/* Fixed bottom button */}
+          <View style={styles.bottomBar}>
+            <GoldButton
+              label={rating === 0 ? 'Selecione uma avaliação' : 'Enviar avaliação ⭐'}
+              disabled={rating === 0}
+              loading={loading}
+              onPress={handleSubmit}
+            />
           </View>
-        )}
-
-        {/* Comment input */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Comentário (opcional)</Text>
-          <TextInput
-            placeholder="Conte como foi o atendimento..."
-            placeholderTextColor={C.gray}
-            value={comment}
-            onChangeText={setComment}
-            multiline
-            numberOfLines={4}
-            style={styles.commentInput}
-            textAlignVertical="top"
-          />
         </View>
-
-        <View style={{ height: 120 }} />
-      </ScrollView>
-
-      {/* Fixed bottom button */}
-      <View style={styles.bottomBar}>
-        <GoldButton
-          label={rating === 0 ? 'Selecione uma avaliação' : 'Enviar avaliação ⭐'}
-          disabled={rating === 0}
-          loading={loading}
-          onPress={handleSubmit}
-        />
-      </View>
-    </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 

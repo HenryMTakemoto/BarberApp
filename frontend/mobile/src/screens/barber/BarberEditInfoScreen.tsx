@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../../theme/colors';
 import CustomInput from '../../components/CustomInput';
 import GoldButton from '../../components/GoldButton';
+import apiRequest from '../../services/api';
 
 type Props = {
   navigation: any;
@@ -74,7 +75,7 @@ export default function BarberEditInfoScreen({ navigation, route }: Props) {
 
       // Fetch master specialties
       try {
-        const specsRes = await fetch('http://192.168.3.56:8080/api/specialties');
+        const specsRes = await apiRequest('/specialties');
         if (specsRes.ok) {
           const specsData = await specsRes.json();
           setMasterSpecialties(specsData);
@@ -114,11 +115,10 @@ export default function BarberEditInfoScreen({ navigation, route }: Props) {
         body.specialtyIds = selectedSpecialties;
       }
 
-      const res = await fetch(`http://192.168.3.56:8080/api/users/${userId}`, {
+      const res = await apiRequest(`/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(body),
       });

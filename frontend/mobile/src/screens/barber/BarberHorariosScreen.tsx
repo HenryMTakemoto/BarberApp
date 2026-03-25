@@ -16,6 +16,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../../theme/colors';
 import CustomInput from '../../components/CustomInput';
 import GoldButton from '../../components/GoldButton';
+import apiRequest from '../../services/api';
+
 
 type Period = {
   id?: number;
@@ -48,9 +50,8 @@ export default function BarberHorariosScreen({ navigation }: any) {
 
   const fetchPeriods = useCallback(async (uid: number, tok: string) => {
     try {
-      const res = await fetch(
-        `http://192.168.3.56:8080/api/barbers/${uid}/availability/periods`,
-        { headers: { Authorization: `Bearer ${tok}` } }
+      const res = await apiRequest(
+        `/barbers/${uid}/availability/periods`
       );
       const data = await res.json();
       setPeriods(Array.isArray(data) ? data : []);
@@ -95,13 +96,12 @@ export default function BarberHorariosScreen({ navigation }: any) {
 
     try {
       setSaving(true);
-      const res = await fetch(
-        `http://192.168.3.56:8080/api/barbers/${userId}/availability/periods`,
+      const res = await apiRequest(
+        `/barbers/${userId}/availability/periods`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ ...editing, slotDurationMinutes: slotMinutes }),
         }
@@ -133,9 +133,9 @@ export default function BarberHorariosScreen({ navigation }: any) {
           style: 'destructive',
           onPress: async () => {
             try {
-              await fetch(
-                `http://192.168.3.56:8080/api/barbers/${userId}/availability/periods/${period.id}`,
-                { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } }
+              await apiRequest(
+                `/barbers/${userId}/availability/periods/${period.id}`,
+                { method: 'DELETE' }
               );
               fetchPeriods(userId!, token);
             } catch {

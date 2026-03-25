@@ -13,6 +13,7 @@ import { RootStackParamList } from '../navigation';
 import { C } from '../theme/colors';
 import GoldButton from '../components/GoldButton';
 import CustomInput from '../components/CustomInput';
+import apiRequest from '../services/api';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Register'>;
@@ -35,7 +36,7 @@ export default function RegisterScreen({ navigation }: Props) {
       setLoading(true);
 
       // POST /api/users — creates new CLIENT account on Spring Boot
-      const response = await fetch('http://192.168.3.56:8080/api/users', {
+      const response = await apiRequest('/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

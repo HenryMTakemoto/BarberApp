@@ -15,6 +15,7 @@ import { RootStackParamList } from '../navigation';
 import { C } from '../theme/colors';
 import GoldButton from '../components/GoldButton';
 import Avatar from '../components/Avatar';
+import apiRequest from '../services/api';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Confirmation'>;
@@ -47,11 +48,10 @@ export default function ConfirmationScreen({ navigation, route }: Props) {
       const scheduledAt = `${dateString}T${time}:00`;
 
       // POST /api/appointments — creates appointment with PENDING status
-      const response = await fetch('http://192.168.3.56:8080/api/appointments', {
+      const response = await apiRequest('/appointments', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
         clientId: user.id,

@@ -15,6 +15,7 @@ import { RootStackParamList } from '../navigation';
 import { C } from '../theme/colors';
 import Avatar from '../components/Avatar';
 import GoldButton from '../components/GoldButton';
+import apiRequest from '../services/api';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'BarberProfile'>;
@@ -35,8 +36,8 @@ export default function BarberProfileScreen({ navigation, route }: Props) {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch(
-          `http://192.168.3.56:8080/api/barbers/${barber.id}/services`
+        const response = await apiRequest(
+          `/barbers/${barber.id}/services`
         );
         const data = await response.json();
         setServices(data);
@@ -55,8 +56,8 @@ export default function BarberProfileScreen({ navigation, route }: Props) {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await fetch(
-          `http://192.168.3.56:8080/api/barbers/${barber.id}/reviews`
+        const response = await apiRequest(
+          `/barbers/${barber.id}/reviews`
         );
         const data = await response.json();
         setReviews(data);

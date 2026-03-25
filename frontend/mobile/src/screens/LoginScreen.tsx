@@ -15,6 +15,7 @@ import { C } from '../theme/colors';
 import GoldButton from '../components/GoldButton';
 import CustomInput from '../components/CustomInput';
 import { registerForPushNotificationsAsync } from '../hooks/usePushNotifications';
+import apiRequest from '../services/api';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -34,7 +35,7 @@ export default function LoginScreen({ navigation }: Props) {
     try {
       setLoading(true);
 
-      const response = await fetch('http://192.168.3.56:8080/api/auth/login', {
+      const response = await apiRequest('/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -58,11 +59,10 @@ export default function LoginScreen({ navigation }: Props) {
         const pushToken = await registerForPushNotificationsAsync();
         if (pushToken) {
           // Send to backend
-          await fetch(`http://192.168.3.56:8080/api/users/${data.user.id}`, {
+          await apiRequest(`/users/${data.user.id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${data.token}`,
             },
             body: JSON.stringify({ pushToken }),
           });

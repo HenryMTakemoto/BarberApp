@@ -16,6 +16,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../../theme/colors';
 import CustomInput from '../../components/CustomInput';
 import GoldButton from '../../components/GoldButton';
+import apiRequest from '../../services/api';
+
 
 type Service = {
   id?: number;
@@ -43,9 +45,8 @@ export default function BarberServicesScreen({ navigation }: any) {
 
   const fetchServices = useCallback(async (uid: number, tok: string) => {
     try {
-      const res = await fetch(
-        `http://192.168.3.56:8080/api/barbers/${uid}/services`,
-        { headers: { Authorization: `Bearer ${tok}` } }
+      const res = await apiRequest(
+        `/barbers/${uid}/services`
       );
       const data = await res.json();
       setServices(Array.isArray(data) ? data : []);
@@ -103,14 +104,13 @@ export default function BarberServicesScreen({ navigation }: any) {
     try {
       setSaving(true);
       const url = isNew
-        ? `http://192.168.3.56:8080/api/barbers/${userId}/services`
-        : `http://192.168.3.56:8080/api/barbers/${userId}/services/${editing.id}`;
+        ? `/barbers/${userId}/services`
+        : `/barbers/${userId}/services/${editing.id}`;
 
-      const res = await fetch(url, {
+      const res = await apiRequest(url, {
         method: isNew ? 'POST' : 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           name: editing.name,
@@ -145,13 +145,12 @@ export default function BarberServicesScreen({ navigation }: any) {
           style: 'destructive',
           onPress: async () => {
             try {
-              await fetch(
-                `http://192.168.3.56:8080/api/barbers/${userId}/services/${service.id}`,
-                {
-                  method: 'DELETE',
-                  headers: { Authorization: `Bearer ${token}` },
-                }
-              );
+                await apiRequest(
+                  `/barbers/${userId}/services/${service.id}`,
+                  {
+                    method: 'DELETE',
+                  }
+                );
               fetchServices(userId!, token);
             } catch (e) {
               Alert.alert('Erro', 'Não foi possível excluir o serviço.');

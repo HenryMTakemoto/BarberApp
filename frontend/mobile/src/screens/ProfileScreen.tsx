@@ -15,6 +15,7 @@ import { RootStackParamList } from '../navigation';
 import { C } from '../theme/colors';
 import Avatar from '../components/Avatar';
 import GoldButton from '../components/GoldButton';
+import apiRequest from '../services/api';
 
 type Props = {
   navigation: any;
@@ -98,7 +99,7 @@ export default function ProfileScreen({ navigation }: Props) {
       formData.append('file', { uri, name: filename, type } as any);
 
       // Upload file
-      const uploadRes = await fetch('http://192.168.3.56:8080/api/upload', {
+      const uploadRes = await apiRequest('/upload', {
         method: 'POST',
         body: formData,
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -109,11 +110,10 @@ export default function ProfileScreen({ navigation }: Props) {
       const imageUrl = data.url;
 
       // Update user profile
-      await fetch(`http://192.168.3.56:8080/api/users/${user.id}`, {
+      await apiRequest(`/users/${user.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ avatarUrl: imageUrl })
       });

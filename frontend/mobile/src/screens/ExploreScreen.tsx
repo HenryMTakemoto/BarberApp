@@ -19,6 +19,7 @@ import * as Location from 'expo-location';
 import { RootStackParamList } from '../navigation';
 import { C } from '../theme/colors';
 import BarberCard from '../components/BarberCard';
+import apiRequest from '../services/api';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Explore'>;
@@ -86,7 +87,7 @@ export default function ExploreScreen({ navigation }: Props) {
 
       // Fetch dynamic specialties filters
       try {
-        const specsRes = await fetch('http://192.168.3.56:8080/api/specialties');
+        const specsRes = await apiRequest('/specialties');
         if (specsRes.ok) {
           const specsData = await specsRes.json();
           const filterNames = specsData.map((s: any) => s.name);
@@ -104,10 +105,10 @@ export default function ExploreScreen({ navigation }: Props) {
         const usedRadius = rad ?? radius;
         const usedLat = lat ?? userLat;
         const usedLng = lng ?? userLng;
-        let url = `http://192.168.3.56:8080/api/users/nearby-barbers?lat=${usedLat}&lng=${usedLng}&radius=${usedRadius}`;
-        if (specialty) url += `&specialty=${encodeURIComponent(specialty)}`;
+        let endpoint = `/users/nearby-barbers?lat=${usedLat}&lng=${usedLng}&radius=${usedRadius}`;
+        if (specialty) endpoint += `&specialty=${encodeURIComponent(specialty)}`;
 
-        const response = await fetch(url);
+        const response = await apiRequest(endpoint);
         const data = await response.json();
         setBarbers(Array.isArray(data) ? data : []);
       } catch (error) {
@@ -128,9 +129,8 @@ export default function ExploreScreen({ navigation }: Props) {
       if (!userJson || !token) return;
       const u = JSON.parse(userJson);
 
-      const response = await fetch(
-        `http://192.168.3.56:8080/api/ai/clients/${u.id}/recommendation?lat=${userLat}&lng=${userLng}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await apiRequest(
+        `/ai/clients/${u.id}/recommendation?lat=${userLat}&lng=${userLng}`
       );
       const data = await response.json();
       setAiRecommendation(data);

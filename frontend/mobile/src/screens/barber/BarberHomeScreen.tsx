@@ -12,6 +12,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../../theme/colors';
 import Avatar from '../../components/Avatar';
+import apiRequest from '../../services/api';
+
 
 export default function BarberHomeScreen({ navigation }: any) {
   const [user, setUser] = useState<any>(null);
@@ -28,7 +30,13 @@ export default function BarberHomeScreen({ navigation }: any) {
   };
 
   // Format date to YYYY-MM-DD for API
-  const todayString = () => new Date().toISOString().split('T')[0];
+  const todayString = () => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -41,17 +49,16 @@ export default function BarberHomeScreen({ navigation }: any) {
 
       // Fetch today's appointments
       // GET /api/appointments/barber/{id}/date/{date}
-      const apptResponse = await fetch(
-        `http://192.168.3.56:8080/api/appointments/barber/${u.id}/date/${todayString()}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const apptResponse = await apiRequest(
+        `/appointments/barber/${u.id}/date/${todayString()}`
       );
       const apptData = await apptResponse.json();
       setAppointments(Array.isArray(apptData) ? apptData : []);
 
       // Fetch recent reviews
       // GET /api/barbers/{id}/reviews
-      const reviewResponse = await fetch(
-        `http://192.168.3.56:8080/api/barbers/${u.id}/reviews`
+      const reviewResponse = await apiRequest(
+        `/barbers/${u.id}/reviews`
       );
       const reviewData = await reviewResponse.json();
       setReviews(Array.isArray(reviewData) ? reviewData.slice(0, 3) : []);

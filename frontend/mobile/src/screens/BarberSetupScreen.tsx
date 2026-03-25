@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../theme/colors';
 import GoldButton from '../components/GoldButton';
 import CustomInput from '../components/CustomInput';
+import apiRequest from '../services/api';
 
 type Props = {
   navigation: any;
@@ -43,7 +44,7 @@ export default function BarberSetupScreen({ navigation }: Props) {
   useEffect(() => {
     const fetchSpecialties = async () => {
       try {
-        const response = await fetch('http://192.168.3.56:8080/api/specialties');
+        const response = await apiRequest('/specialties');
         const data = await response.json();
         setSpecialties(Array.isArray(data) ? data : []);
       } catch (error) {
@@ -88,13 +89,12 @@ export default function BarberSetupScreen({ navigation }: Props) {
 
       const user = JSON.parse(userJson);
 
-      const response = await fetch(
-        `http://192.168.3.56:8080/api/users/${user.id}`,
+      const response = await apiRequest(
+        `/users/${user.id}`,
         {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             bio: bio || null,

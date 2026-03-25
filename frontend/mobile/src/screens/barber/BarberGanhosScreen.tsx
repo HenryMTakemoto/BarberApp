@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { C } from '../../theme/colors';
+import apiRequest from '../../services/api';
 
 type ViewMode = 'annual' | 'monthly' | 'weekly';
 
@@ -40,9 +41,8 @@ export default function BarberGanhosScreen({ navigation }: any) {
       setUser(u);
 
       // GET /api/appointments/barber/{id} — all appointments
-      const response = await fetch(
-        `http://192.168.3.56:8080/api/appointments/barber/${u.id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await apiRequest(
+        `/appointments/barber/${u.id}`
       );
       const data = await response.json();
       // Only count COMPLETED appointments for earnings
@@ -73,9 +73,7 @@ export default function BarberGanhosScreen({ navigation }: any) {
     setInsights([]);
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await fetch(`http://192.168.3.56:8080/api/ai/barbers/${user.id}/insights`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiRequest(`/ai/barbers/${user.id}/insights`);
       const data = await response.json();
       if (Array.isArray(data)) {
         setInsights(data);
