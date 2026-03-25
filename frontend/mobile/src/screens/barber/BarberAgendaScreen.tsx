@@ -25,7 +25,7 @@ export default function BarberAgendaScreen({ navigation }: any) {
   const generateDays = () => {
     const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-    return Array.from({ length: 7 }, (_, i) => {
+    return Array.from({ length: 30 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() + i);
       return {
@@ -108,10 +108,10 @@ export default function BarberAgendaScreen({ navigation }: any) {
   };
 
   const STATUS_CONFIG: Record<string, { color: string; bg: string; label: string }> = {
-    PENDING:   { color: C.gold,  bg: 'rgba(212,168,67,0.15)',  label: 'Pendente'   },
-    CONFIRMED: { color: C.green, bg: 'rgba(82,192,138,0.15)',  label: 'Confirmado' },
-    COMPLETED: { color: C.gray,  bg: 'rgba(138,138,138,0.15)', label: 'Concluído'  },
-    CANCELLED: { color: C.red,   bg: 'rgba(224,82,82,0.15)',   label: 'Cancelado'  },
+    PENDING: { color: C.gold, bg: 'rgba(212,168,67,0.15)', label: 'Pendente' },
+    CONFIRMED: { color: C.green, bg: 'rgba(82,192,138,0.15)', label: 'Confirmado' },
+    COMPLETED: { color: C.gray, bg: 'rgba(138,138,138,0.15)', label: 'Concluído' },
+    CANCELLED: { color: C.red, bg: 'rgba(224,82,82,0.15)', label: 'Cancelado' },
   };
 
   const totalEarnings = appointments

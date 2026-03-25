@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -22,6 +23,9 @@ export default function BarberGanhosScreen({ navigation }: any) {
   const [viewMode, setViewMode] = useState<ViewMode>('annual');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+
+  const [insights, setInsights] = useState<string[]>([]);
+  const [loadingInsights, setLoadingInsights] = useState(false);
 
   const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const MONTHS_FULL = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -61,7 +65,29 @@ export default function BarberGanhosScreen({ navigation }: any) {
     return unsubscribe;
   }, [navigation]);
 
-  const handleRefresh = () => { setRefreshing(true); fetchAppointments(); };
+  const handleRefresh = () => { setRefreshing(true); fetchAppointments(); setInsights([]); };
+
+  const fetchInsights = async () => {
+    if (!user) return;
+    setLoadingInsights(true);
+    setInsights([]);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await fetch(`http://192.168.3.56:8080/api/ai/barbers/${user.id}/insights`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setInsights(data);
+      } else {
+        Alert.alert('Erro', 'Formato de resposta inesperado da IA.');
+      }
+    } catch (e) {
+      Alert.alert('Erro', 'Falha ao buscar insights da IA.');
+    } finally {
+      setLoadingInsights(false);
+    }
+  };
 
   // Group appointments by month for annual view
   const getAnnualData = () => {
@@ -244,6 +270,41 @@ export default function BarberGanhosScreen({ navigation }: any) {
             </View>
           </View>
 
+          {/* AI Insights Card */}
+          <View style={styles.aiCard}>
+            <View style={styles.aiHeader}>
+              <Text style={styles.aiTitle}>🤖 Consultor IA</Text>
+              {!loadingInsights && insights.length === 0 && (
+                <TouchableOpacity style={styles.aiButton} onPress={fetchInsights}>
+                  <Text style={styles.aiButtonText}>Gerar Análise</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {loadingInsights && (
+              <ActivityIndicator color={C.gold} style={{ marginVertical: 20 }} />
+            )}
+
+            {insights.length > 0 && (
+              <View style={styles.insightsList}>
+                {insights.map((insight, idx) => (
+                  <View key={idx} style={styles.insightItem}>
+                    <Text style={styles.insightDot}>•</Text>
+                    <Text style={styles.insightText}>{insight}</Text>
+                  </View>
+                ))}
+                <TouchableOpacity style={styles.aiButtonSmall} onPress={fetchInsights}>
+                  <Text style={styles.aiButtonTextSmall}>🔄 Atualizar</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            {!loadingInsights && insights.length === 0 && (
+              <Text style={styles.aiDesc}>
+                Cruza seus dados de faturamento e agenda para lhe dar dicas de negócios.
+              </Text>
+            )}
+          </View>
+
           {/* Bar chart */}
           <View style={styles.chartCard}>
             <Text style={styles.chartTitle}>
@@ -375,4 +436,20 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: C.border, alignItems: 'center',
   },
   backToAnnualText: { color: C.gold, fontSize: 13, fontWeight: '600' },
+  aiCard: {
+    backgroundColor: 'rgba(212,168,67,0.08)',
+    borderRadius: 16, padding: 20, marginBottom: 16,
+    borderWidth: 1, borderColor: 'rgba(212,168,67,0.3)',
+  },
+  aiHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  aiTitle: { color: C.gold, fontSize: 16, fontWeight: '800' },
+  aiDesc: { color: C.gray, fontSize: 13, lineHeight: 18, marginTop: 4 },
+  aiButton: { backgroundColor: C.gold, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  aiButtonText: { color: '#0A0A0A', fontSize: 12, fontWeight: '700' },
+  insightsList: { marginTop: 12, gap: 10 },
+  insightItem: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
+  insightDot: { color: C.gold, fontSize: 16, fontWeight: '900', marginTop: -2 },
+  insightText: { color: C.white, fontSize: 14, flex: 1, lineHeight: 20 },
+  aiButtonSmall: { alignSelf: 'flex-end', marginTop: 12, padding: 8 },
+  aiButtonTextSmall: { color: C.gold, fontSize: 12, fontWeight: '600' },
 });

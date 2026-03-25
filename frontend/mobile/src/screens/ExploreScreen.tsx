@@ -12,6 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MapView, { Marker, Callout, PROVIDER_DEFAULT } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -34,7 +35,7 @@ const RADIUS_OPTIONS = [
   { label: '50 km', value: 50 },
 ];
 
-const QUICK_FILTERS = ['Degradê', 'Barba', 'Afro', 'Navalhado', 'Tranças', 'Coloração', 'Clássico'];
+// QUICK_FILTERS is now dynamically fetched
 
 export default function ExploreScreen({ navigation }: Props) {
   const [barbers, setBarbers] = useState<any[]>([]);
@@ -42,11 +43,14 @@ export default function ExploreScreen({ navigation }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [dynamicFilters, setDynamicFilters] = useState<string[]>([]);
   const [radius, setRadius] = useState(10);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [userLat, setUserLat] = useState(DEFAULT_LAT);
   const [userLng, setUserLng] = useState(DEFAULT_LNG);
   const [locationGranted, setLocationGranted] = useState<boolean | null>(null);
+  const [aiRecommendation, setAiRecommendation] = useState<{ recommendedBarberId: number | null, reason: string } | null>(null);
+  const [loadingAi, setLoadingAi] = useState(false);
   const mapRef = useRef<MapView>(null);
 
   const getGreeting = () => {
@@ -61,15 +65,15 @@ export default function ExploreScreen({ navigation }: Props) {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === 'granted') {
-        setLocationGranted(true);
         try {
           const loc = await Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.Balanced,
           });
           setUserLat(loc.coords.latitude);
           setUserLng(loc.coords.longitude);
+          setLocationGranted(true);
         } catch {
-          // fallback already set
+          setLocationGranted(true); // fallback to SP but marked as granted to proceed
         }
       } else {
         setLocationGranted(false);
@@ -78,6 +82,18 @@ export default function ExploreScreen({ navigation }: Props) {
           'Permissão negada. Usando São Paulo como localização padrão.',
           [{ text: 'OK' }]
         );
+      }
+
+      // Fetch dynamic specialties filters
+      try {
+        const specsRes = await fetch('http://192.168.3.56:8080/api/specialties');
+        if (specsRes.ok) {
+          const specsData = await specsRes.json();
+          const filterNames = specsData.map((s: any) => s.name);
+          setDynamicFilters(filterNames);
+        }
+      } catch (err) {
+        console.log('Error fetching filters:', err);
       }
     })();
   }, []);
@@ -104,6 +120,27 @@ export default function ExploreScreen({ navigation }: Props) {
     [radius, userLat, userLng]
   );
 
+  const fetchAiRecommendation = useCallback(async () => {
+    try {
+      setLoadingAi(true);
+      const userJson = await AsyncStorage.getItem('user');
+      const token = await AsyncStorage.getItem('token');
+      if (!userJson || !token) return;
+      const u = JSON.parse(userJson);
+
+      const response = await fetch(
+        `http://192.168.3.56:8080/api/ai/clients/${u.id}/recommendation?lat=${userLat}&lng=${userLng}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = await response.json();
+      setAiRecommendation(data);
+    } catch (error) {
+      console.error('Error fetching AI recommendation:', error);
+    } finally {
+      setLoadingAi(false);
+    }
+  }, [userLat, userLng]);
+
   // Re-fetch when location is resolved or radius/specialty changes
   useEffect(() => {
     if (locationGranted !== null) {
@@ -111,6 +148,12 @@ export default function ExploreScreen({ navigation }: Props) {
       fetchBarbers(activeFilter, radius, userLat, userLng);
     }
   }, [activeFilter, radius, userLat, userLng, locationGranted]);
+
+  useEffect(() => {
+    if (locationGranted !== null) {
+      fetchAiRecommendation();
+    }
+  }, [locationGranted, fetchAiRecommendation]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -162,6 +205,39 @@ export default function ExploreScreen({ navigation }: Props) {
       </View>
     </View>
   );
+
+  const renderAiCard = () => {
+    if (loadingAi) {
+      return (
+        <View style={styles.aiCard}>
+          <ActivityIndicator color={C.gold} size="small" />
+          <Text style={styles.aiLoadingText}>Analisando seu perfil com IA...</Text>
+        </View>
+      );
+    }
+    if (!aiRecommendation) return null;
+
+    const recommendedBarber = aiRecommendation.recommendedBarberId
+      ? barbers.find(b => b.id === aiRecommendation.recommendedBarberId)
+      : null;
+
+    return (
+      <View style={styles.aiCard}>
+        <View style={styles.aiHeader}>
+          <Text style={styles.aiTitle}>🤖 Escolha Ideal para Você</Text>
+        </View>
+        <Text style={styles.aiReason}>{aiRecommendation.reason}</Text>
+        {recommendedBarber ? (
+          <TouchableOpacity
+            style={styles.aiBarberBtn}
+            onPress={() => navigation.navigate('BarberProfile', { barber: recommendedBarber })}
+          >
+            <Text style={styles.aiBarberBtnText}>Agendar com {recommendedBarber.name} →</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -253,7 +329,7 @@ export default function ExploreScreen({ navigation }: Props) {
               Todos
             </Text>
           </TouchableOpacity>
-          {QUICK_FILTERS.map((f) => (
+          {dynamicFilters.map((f) => (
             <TouchableOpacity
               key={f}
               onPress={() => handleFilter(f)}
@@ -345,35 +421,48 @@ export default function ExploreScreen({ navigation }: Props) {
             <SkeletonCard />
           </View>
         ) : filtered.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyEmoji}>✂️</Text>
-            <Text style={styles.emptyTitle}>
-              {search ? 'Nenhum resultado' : 'Sem barbeiros por aqui'}
-            </Text>
-            <Text style={styles.emptySubtitle}>
-              {search
-                ? `Nenhum barbeiro para "${search}"`
-                : `Tente aumentar o raio de busca (atual: ${radius} km)`}
-            </Text>
-            {search ? (
-              <TouchableOpacity onPress={() => setSearch('')} style={styles.clearButton}>
-                <Text style={styles.clearButtonText}>Limpar busca</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                onPress={() => handleRadiusChange(50)}
-                style={styles.clearButton}
-              >
-                <Text style={styles.clearButtonText}>Ampliar para 50 km</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+          <ScrollView
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor={C.gold}
+              />
+            }
+          >
+            {renderAiCard()}
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyEmoji}>✂️</Text>
+              <Text style={styles.emptyTitle}>
+                {search ? 'Nenhum resultado' : 'Sem barbeiros por aqui'}
+              </Text>
+              <Text style={styles.emptySubtitle}>
+                {search
+                  ? `Nenhum barbeiro para "${search}"`
+                  : `Tente aumentar o raio de busca (atual: ${radius} km)`}
+              </Text>
+              {search ? (
+                <TouchableOpacity onPress={() => setSearch('')} style={styles.clearButton}>
+                  <Text style={styles.clearButtonText}>Limpar busca</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => handleRadiusChange(50)}
+                  style={styles.clearButton}
+                >
+                  <Text style={styles.clearButtonText}>Ampliar para 50 km</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </ScrollView>
         ) : (
           <FlatList
             data={filtered}
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
+            ListHeaderComponent={renderAiCard}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -543,4 +632,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // AI Card
+  aiCard: {
+    backgroundColor: 'rgba(212,168,67,0.08)',
+    borderRadius: 16, padding: 20, marginBottom: 20,
+    borderWidth: 1, borderColor: 'rgba(212,168,67,0.3)',
+    alignItems: 'flex-start',
+  },
+  aiHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  aiTitle: { color: C.gold, fontSize: 16, fontWeight: '800' },
+  aiReason: { color: C.gray, fontSize: 13, lineHeight: 20, marginBottom: 16 },
+  aiLoadingText: { color: C.gold, fontSize: 13, marginTop: 12, fontWeight: '600' },
+  aiBarberBtn: { backgroundColor: C.gold, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10 },
+  aiBarberBtnText: { color: '#0A0A0A', fontSize: 13, fontWeight: '700' },
 });

@@ -17,6 +17,8 @@ public class UserDTO {
     private String phoneNumber;
     private Role role;
     private String avatarUrl;
+    private String pushToken;
+    private Boolean isOnline;
     private Set<String> specialties;
     private AddressDTO address;
     private Double distanceKm;

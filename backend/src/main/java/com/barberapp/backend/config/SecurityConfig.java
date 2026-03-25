@@ -49,11 +49,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/google").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/upload").permitAll()
 
                         // All GET routes are public
                         .requestMatchers(HttpMethod.GET, "/**").permitAll()
 
                         // Everything else requires authentication
+                        .requestMatchers(HttpMethod.GET, "/api/ai/barbers/*/insights").hasRole("BARBER")
+                        .requestMatchers(HttpMethod.GET, "/api/ai/clients/*/recommendation").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

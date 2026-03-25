@@ -42,7 +42,8 @@ public class UserService implements UserDetailsService {
 
     public UserDTO registerUser(UserDTO userDTO) {
         if (userRepository.existsByEmail(userDTO.getEmail())) {
-            throw new RuntimeException("Email já existente");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "Este e-mail já está cadastrado. Tente fazer login.");
         }
         if (userDTO.getPassword() == null || userDTO.getPassword().isBlank()) {
             throw new ResponseStatusException(
@@ -100,6 +101,8 @@ public class UserService implements UserDetailsService {
             user.setEmail(dto.getEmail());
         }
         if (dto.getBio() != null) user.setBio(dto.getBio());
+        if (dto.getPushToken() != null) user.setPushToken(dto.getPushToken());
+        if (dto.getIsOnline() != null) user.setIsOnline(dto.getIsOnline());
         if (dto.getSpecialtyIds() != null) {
             List<Specialty> foundSpecialties =
                     specialtyRepository.findAllById(dto.getSpecialtyIds());
@@ -149,7 +152,9 @@ public class UserService implements UserDetailsService {
         dto.setEmail(user.getEmail());
         dto.setPhoneNumber(user.getPhoneNumber());
         dto.setAvatarUrl(user.getAvatarUrl());
+        dto.setPushToken(user.getPushToken());
         dto.setRole(user.getRole());
+        dto.setIsOnline(user.getIsOnline());
         if (user.getSpecialties() != null) {
             dto.setSpecialties(user.getSpecialties().stream()
                     .map(Specialty::getName)

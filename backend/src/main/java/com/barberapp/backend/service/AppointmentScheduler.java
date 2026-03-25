@@ -6,6 +6,7 @@ import com.barberapp.backend.repository.AppointmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,6 +20,7 @@ public class AppointmentScheduler {
     // Runs every 5 minutes — checks for appointments that should be completed
     // fixedRate = 300000ms = 5 minutes
     @Scheduled(fixedRate = 300000)
+    @Transactional
     public void autoCompleteAppointments() {
         LocalDateTime now = LocalDateTime.now();
 

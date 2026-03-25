@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 import { RootStackParamList } from '../navigation';
 import { C } from '../theme/colors';
 import Avatar from '../components/Avatar';
@@ -69,6 +70,64 @@ export default function ProfileScreen({ navigation }: Props) {
     );
   };
 
+  const handleEditAvatar = async () => {
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        await uploadAvatar(result.assets[0].uri);
+      }
+    } catch (err) {
+      console.log('Error launching image picker: ', err);
+    }
+  };
+
+  const uploadAvatar = async (uri: string) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      let filename = uri.split('/').pop() || 'photo.jpg';
+      let match = /\.(\w+)$/.exec(filename);
+      let type = match ? `image/${match[1]}` : `image`;
+
+      let formData = new FormData();
+      formData.append('file', { uri, name: filename, type } as any);
+
+      // Upload file
+      const uploadRes = await fetch('http://192.168.3.56:8080/api/upload', {
+        method: 'POST',
+        body: formData,
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      
+      const data = await uploadRes.json();
+      if (!data.url) throw new Error('Upload failed');
+      const imageUrl = data.url;
+
+      // Update user profile
+      await fetch(`http://192.168.3.56:8080/api/users/${user.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ avatarUrl: imageUrl })
+      });
+
+      const updatedUser = { ...user, avatarUrl: imageUrl };
+      setUser(updatedUser);
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+      Alert.alert('Sucesso', 'Sua foto de perfil foi atualizada!');
+    } catch (e) {
+      console.log('Avatar upload error', e);
+      Alert.alert('Erro', 'Não foi possível salvar a foto.');
+    }
+  };
+
   if (!user) return null;
 
   const isBarber = user.role === 'BARBER';
@@ -81,14 +140,16 @@ export default function ProfileScreen({ navigation }: Props) {
           {/* Avatar + user info */}
           <View style={styles.userRow}>
             <View style={styles.avatarWrapper}>
-              <Avatar
-                url={user.avatarUrl}
-                size={72}
-                borderColor={C.gold}
-              />
-              {/* Edit avatar button */}
-              <TouchableOpacity style={styles.editAvatarButton}>
-                <Text style={styles.editAvatarIcon}>✏️</Text>
+              <TouchableOpacity onPress={handleEditAvatar} activeOpacity={0.8}>
+                <Avatar
+                  url={user.avatarUrl}
+                  size={72}
+                  borderColor={C.gold}
+                />
+                {/* Edit avatar button */}
+                <View style={styles.editAvatarButton}>
+                  <Text style={styles.editAvatarIcon}>✏️</Text>
+                </View>
               </TouchableOpacity>
             </View>
 

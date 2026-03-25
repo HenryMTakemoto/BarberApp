@@ -28,4 +28,11 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             Long clientId,
             AppointmentStatus status);
     List<Appointment> findByStatusIn(List<AppointmentStatus> statuses);
+
+    // Agendamentos por status e range de data (usado para jobs)
+    List<Appointment> findByStatusAndDateBetween(
+            AppointmentStatus status, 
+            LocalDateTime start, 
+            LocalDateTime end
+    );
 }

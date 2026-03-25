@@ -25,7 +25,7 @@ const generateNextDays = () => {
   const weekdays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < 30; i++) {
     const date = new Date();
     date.setDate(date.getDate() + i);
     days.push({
@@ -98,7 +98,7 @@ export default function BookingScreen({ navigation, route }: Props) {
         {/* Day selector */}
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>Selecione o dia</Text>
-          <View style={styles.daysGrid}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.daysGrid}>
             {days.map((day) => {
               const active = selectedDay.dateString === day.dateString;
               return (
@@ -120,7 +120,7 @@ export default function BookingScreen({ navigation, route }: Props) {
                 </TouchableOpacity>
               );
             })}
-          </View>
+          </ScrollView>
         </View>
 
         {/* Time slots */}
@@ -284,11 +284,13 @@ const styles = StyleSheet.create({
   daysGrid: {
     flexDirection: 'row',
     gap: 8,
+    paddingRight: 20,
   },
   dayCard: {
-    flex: 1,
+    minWidth: 60,
     alignItems: 'center',
     paddingVertical: 12,
+    paddingHorizontal: 12,
     backgroundColor: C.card,
     borderRadius: 14,
     borderWidth: 1.5,

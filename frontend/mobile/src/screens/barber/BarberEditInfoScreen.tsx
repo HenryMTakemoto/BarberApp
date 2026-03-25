@@ -24,9 +24,13 @@ type Props = {
 export default function BarberEditInfoScreen({ navigation, route }: Props) {
   const initialSection = route?.params?.section || 'bio';
 
-  const [activeSection, setActiveSection] = useState<'bio' | 'address'>(initialSection);
+  const [activeSection, setActiveSection] = useState<'bio' | 'address' | 'specialties'>(initialSection as any);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // Specialties
+  const [masterSpecialties, setMasterSpecialties] = useState<{ id: number; name: string }[]>([]);
+  const [selectedSpecialties, setSelectedSpecialties] = useState<number[]>([]);
 
   // Bio
   const [bio, setBio] = useState('');
@@ -63,6 +67,22 @@ export default function BarberEditInfoScreen({ navigation, route }: Props) {
         setLatitude(u.address.latitude ? String(u.address.latitude) : '');
         setLongitude(u.address.longitude ? String(u.address.longitude) : '');
       }
+      // Config specialties
+      if (u.specialties && Array.isArray(u.specialties)) {
+        setSelectedSpecialties(u.specialties.map((s: any) => s.id));
+      }
+
+      // Fetch master specialties
+      try {
+        const specsRes = await fetch('http://192.168.3.56:8080/api/specialties');
+        if (specsRes.ok) {
+          const specsData = await specsRes.json();
+          setMasterSpecialties(specsData);
+        }
+      } catch (e) {
+        console.log('Error fetching specialties', e);
+      }
+
       setLoading(false);
     })();
   }, []);
@@ -80,7 +100,7 @@ export default function BarberEditInfoScreen({ navigation, route }: Props) {
 
       if (activeSection === 'bio') {
         body.bio = bio;
-      } else {
+      } else if (activeSection === 'address') {
         body.address = {
           street: street || null,
           number: number || null,
@@ -90,6 +110,8 @@ export default function BarberEditInfoScreen({ navigation, route }: Props) {
           latitude: latitude ? parseFloat(latitude) : null,
           longitude: longitude ? parseFloat(longitude) : null,
         };
+      } else if (activeSection === 'specialties') {
+        body.specialtyIds = selectedSpecialties;
       }
 
       const res = await fetch(`http://192.168.3.56:8080/api/users/${userId}`, {
@@ -137,20 +159,20 @@ export default function BarberEditInfoScreen({ navigation, route }: Props) {
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={styles.title}>Editar Perfil</Text>
-          <Text style={styles.subtitle}>Bio e endereço do estabelecimento</Text>
+          <Text style={styles.subtitle}>Perfil e estabelecimento</Text>
         </View>
       </View>
 
       {/* Tab selector */}
       <View style={styles.tabs}>
-        {(['bio', 'address'] as const).map((tab) => (
+        {(['bio', 'specialties', 'address'] as const).map((tab) => (
           <TouchableOpacity
             key={tab}
             style={[styles.tab, activeSection === tab && styles.tabActive]}
             onPress={() => setActiveSection(tab)}
           >
             <Text style={[styles.tabText, activeSection === tab && styles.tabTextActive]}>
-              {tab === 'bio' ? '📝 Bio' : '📍 Endereço'}
+              {tab === 'bio' ? '📝 Bio' : tab === 'specialties' ? '✂️ Esp.' : '📍 Endereço'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -180,6 +202,35 @@ export default function BarberEditInfoScreen({ navigation, route }: Props) {
                 <Text style={styles.tipText}>
                   💡 Uma bio bem escrita aumenta sua visibilidade no Radar e passa mais confiança para os clientes.
                 </Text>
+              </View>
+            </>
+          ) : activeSection === 'specialties' ? (
+            <>
+              <Text style={styles.sectionLabel}>Suas especialidades</Text>
+              <View style={styles.tipCard}>
+                <Text style={styles.tipText}>
+                  💡 Selecione quais os tipos de cortes e estilos você domina. O Radar usa isso para cruzar você com os clientes certos!
+                </Text>
+              </View>
+              <View style={styles.specsGrid}>
+                {masterSpecialties.map((spec) => {
+                  const isSelected = selectedSpecialties.includes(spec.id);
+                  return (
+                    <TouchableOpacity
+                      key={spec.id}
+                      style={[styles.specChip, isSelected && styles.specChipActive]}
+                      onPress={() => {
+                        setSelectedSpecialties((prev) =>
+                          isSelected ? prev.filter((id) => id !== spec.id) : [...prev, spec.id]
+                        );
+                      }}
+                    >
+                      <Text style={[styles.specText, isSelected && styles.specTextActive]}>
+                        {spec.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </>
           ) : (
@@ -279,4 +330,13 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: C.border, marginBottom: 16,
   },
   tipText: { color: C.gray, fontSize: 12, lineHeight: 18 },
+  specsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10 },
+  specChip: {
+    paddingHorizontal: 16, paddingVertical: 10,
+    borderRadius: 20, backgroundColor: C.card,
+    borderWidth: 1, borderColor: C.border,
+  },
+  specChipActive: { backgroundColor: C.gold, borderColor: C.gold },
+  specText: { color: C.gray, fontWeight: '600', fontSize: 13 },
+  specTextActive: { color: '#0A0A0A', fontWeight: '800' },
 });

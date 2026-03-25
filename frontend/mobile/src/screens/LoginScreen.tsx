@@ -14,6 +14,7 @@ import { RootStackParamList } from '../navigation';
 import { C } from '../theme/colors';
 import GoldButton from '../components/GoldButton';
 import CustomInput from '../components/CustomInput';
+import { registerForPushNotificationsAsync } from '../hooks/usePushNotifications';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Login'>;
@@ -50,7 +51,27 @@ export default function LoginScreen({ navigation }: Props) {
       await AsyncStorage.setItem('token', data.token);
       await AsyncStorage.setItem('user', JSON.stringify(data.user));
 
-      // Redirect based on role — BARBER goes to barber dashboard
+      // ----------------------------------------------------
+      // Push Notification Token request
+      // ----------------------------------------------------
+      try {
+        const pushToken = await registerForPushNotificationsAsync();
+        if (pushToken) {
+          // Send to backend
+          await fetch(`http://192.168.3.56:8080/api/users/${data.user.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${data.token}`,
+            },
+            body: JSON.stringify({ pushToken }),
+          });
+        }
+      } catch (pushErr) {
+        console.log('Push setup failed:', pushErr);
+      }
+
+      // Redirect based on role
       if (data.user.role === 'BARBER') {
         navigation.replace('BarberTabs');
       } else {

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 import { C } from '../../theme/colors';
 import Avatar from '../../components/Avatar';
 import GoldButton from '../../components/GoldButton';
@@ -29,6 +30,7 @@ export default function BarberProfileEditScreen({ navigation }: any) {
 
       const u = JSON.parse(userJson);
       setUser(u);
+      setIsOnline(u.isOnline !== false); // default to true if undefined
 
       // Fetch barber services
       const response = await fetch(
@@ -65,6 +67,85 @@ export default function BarberProfileEditScreen({ navigation }: any) {
     ]);
   };
 
+  const handleEditAvatar = async () => {
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        await uploadAvatar(result.assets[0].uri);
+      }
+    } catch (err) {
+      console.log('Error launching image picker: ', err);
+    }
+  };
+
+  const uploadAvatar = async (uri: string) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      let filename = uri.split('/').pop() || 'photo.jpg';
+      let match = /\.(\w+)$/.exec(filename);
+      let type = match ? `image/${match[1]}` : `image`;
+
+      let formData = new FormData();
+      formData.append('file', { uri, name: filename, type } as any);
+
+      // 1. Upload file
+      const uploadRes = await fetch('http://192.168.3.56:8080/api/upload', {
+        method: 'POST',
+        body: formData,
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      
+      const data = await uploadRes.json();
+      if (!data.url) throw new Error('Upload failed');
+      const imageUrl = data.url;
+
+      // 2. Update user profile
+      await fetch(`http://192.168.3.56:8080/api/users/${user.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ avatarUrl: imageUrl })
+      });
+
+      const updatedUser = { ...user, avatarUrl: imageUrl };
+      setUser(updatedUser);
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+      Alert.alert('Sucesso', 'Sua foto de perfil foi atualizada!');
+    } catch (e) {
+      console.log('Avatar upload error', e);
+      Alert.alert('Erro', 'Não foi possível salvar a foto.');
+    }
+  };
+
+  const toggleOnlineStatus = async (val: boolean) => {
+    setIsOnline(val);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      await fetch(`http://192.168.3.56:8080/api/users/${user.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ isOnline: val })
+      });
+      const updatedUser = { ...user, isOnline: val };
+      setUser(updatedUser);
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+    } catch (e) {
+      console.log('Error toggling online status', e);
+      setIsOnline(!val); // Revert on failure
+    }
+  };
+
   const renderStars = (rating: number) =>
     '★'.repeat(Math.round(rating || 0)) + '☆'.repeat(5 - Math.round(rating || 0));
 
@@ -83,7 +164,16 @@ export default function BarberProfileEditScreen({ navigation }: any) {
         <View style={styles.header}>
           <View style={styles.userRow}>
             <View style={styles.avatarWrapper}>
-              <Avatar url={user?.avatarUrl} size={72} borderColor={C.gold} />
+              <TouchableOpacity onPress={handleEditAvatar} activeOpacity={0.8}>
+                <Avatar url={user?.avatarUrl} size={72} borderColor={C.gold} />
+                <View style={{
+                  position: 'absolute', bottom: 0, right: 0,
+                  backgroundColor: C.gold, borderRadius: 12, width: 24, height: 24,
+                  alignItems: 'center', justifyContent: 'center'
+                }}>
+                  <Text style={{ fontSize: 12 }}>✏️</Text>
+                </View>
+              </TouchableOpacity>
             </View>
             <View style={styles.userInfo}>
               <Text style={styles.userName}>{user?.name}</Text>
@@ -113,7 +203,7 @@ export default function BarberProfileEditScreen({ navigation }: any) {
             </View>
             <Switch
               value={isOnline}
-              onValueChange={setIsOnline}
+              onValueChange={toggleOnlineStatus}
               trackColor={{ false: C.grayDim, true: C.green }}
               thumbColor={isOnline ? 'white' : C.gray}
             />

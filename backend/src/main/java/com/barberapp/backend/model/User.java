@@ -45,6 +45,12 @@ public class User implements UserDetails {
     @Column(length = 500)
     private String bio;
 
+    @Column(columnDefinition = "boolean default true")
+    @Builder.Default
+    private Boolean isOnline = true;
+
+    private String pushToken;
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "address_id", referencedColumnName = "id")
     private Address address;

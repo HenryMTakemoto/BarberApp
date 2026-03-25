@@ -16,7 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
     // Busca barbeiros próximos ordenados pela distância
     @Query(value = "SELECT * FROM users u " +
-            "WHERE u.role = 'BARBER' " +
+            "WHERE u.role = 'BARBER' AND (u.is_online IS NULL OR u.is_online = true) " +
             "AND u.id IN (" +
             "  SELECT u2.id FROM users u2 " +
             "  JOIN addresses a ON u2.address_id = a.id " +
